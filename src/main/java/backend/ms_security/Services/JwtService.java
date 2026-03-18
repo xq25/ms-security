@@ -1,0 +1,101 @@
+package backend.ms_security.Services;
+
+import backend.ms_security.Models.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+@Service
+public class JwtService {
+    // Necesitamos dos variables de entorno para que JWT funcione.
+    @Value("${jwt.secret}") // El secreto (Firma).
+    private String secret; // Esta es la clave secreta que se utiliza para firmar el token. Debe mantenerse segura.
+
+    @Value("${jwt.expiration}") // (Expiracion del token).
+    private Long expiration; // Tiempo de expiración del token en milisegundos.
+
+    private Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+
+    public String generateToken(User theUser) {
+        //  Calculamos la fecha de expiracion del token
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", theUser.getId());
+        claims.put("name", theUser.getName());
+        claims.put("email", theUser.getEmail());
+
+        return Jwts.builder() // Constructor del token
+                .setClaims(claims) // Payload
+                .setSubject(theUser.getName())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate) // Expiracion del token
+                .signWith(secretKey) // Firma del token
+                .compact(); // Lo compactamos dentro de una cadena de caracteres(String)
+    }
+
+    public Date getExpirationDate(){
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+        return expiryDate;
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jws<Claims> claimsJws = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token);
+
+            // Verifica la expiración del token
+            Date now = new Date();
+            if (claimsJws.getBody().getExpiration().before(now)) {
+                return false;
+            }
+
+            return true;
+        } catch (SignatureException ex) {
+            // La firma del token es inválida
+            return false;
+        } catch (Exception e) {
+            // Otra excepción
+            return false;
+        }
+    }
+
+    /*
+    Metodo encargaado de devolvernos el usuario al cual pertence el token( Re armar el usuario con el token )
+     */
+    public User getUserFromToken(String token) {
+        try {
+            // Validamoss que el token no este corrupto
+
+            Jws<Claims> claimsJws = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token);
+
+            Claims claims = claimsJws.getBody();
+
+            User user = new User();
+            user.setId((String) claims.get("id"));
+            user.setName((String) claims.get("name"));
+            user.setEmail((String) claims.get("email"));
+            return user;
+        } catch (Exception e) {
+            // En caso de que el token sea inválido o haya expirado
+            return null;
+        }
+    }
+
+
+}
