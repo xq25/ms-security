@@ -43,5 +43,21 @@ public class SecurityController {
         }
         return theResponse;
     }
+    @PostMapping("login/oauth")
+    public HashMap<String, Object> loginOAuth(@RequestBody HashMap<String, String> body,
+                                              final HttpServletResponse response) throws IOException {
+        HashMap<String, Object> theResponse = new HashMap<>();
+
+        String idToken = body.get("idToken"); // El token que viene del frontend Firebase
+        Session session = this.theSecurityService.loginOAuth(idToken);
+
+        if (session != null) {
+            theResponse.put("session", session);
+        } else {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        }
+
+        return theResponse;
+    }
 
 }
