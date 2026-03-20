@@ -43,13 +43,13 @@ public class SecurityController {
         }
         return theResponse;
     }
-    @PostMapping("login/oauth")
+    @PostMapping("login//google")
     public HashMap<String, Object> loginOAuth(@RequestBody HashMap<String, String> body,
                                               final HttpServletResponse response) throws IOException {
         HashMap<String, Object> theResponse = new HashMap<>();
 
         String idToken = body.get("idToken"); // El token que viene del frontend Firebase
-        Session session = this.theSecurityService.loginOAuth(idToken);
+        Session session = this.theSecurityService.loginOAuthGoogle(idToken);
 
         if (session != null) {
             theResponse.put("session", session);
@@ -57,6 +57,39 @@ public class SecurityController {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         }
 
+        return theResponse;
+    }
+    // =========================
+    // LOGIN CON GITHUB
+    // =========================
+    @PostMapping("login/oauth/github")
+    public HashMap<String, Object> loginGithub(@RequestBody HashMap<String, String> body,
+                                               final HttpServletResponse response) throws IOException {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        Session session = this.theSecurityService.loginOAuthGithub(body.get("idToken"));
+
+        if (session != null) {
+            theResponse.put("session", session);
+        } else {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        }
+        return theResponse;
+    }
+
+    // =========================
+    // LOGIN CON MICROSOFT
+    // =========================
+    @PostMapping("login/oauth/microsoft")
+    public HashMap<String, Object> loginMicrosoft(@RequestBody HashMap<String, String> body,
+                                                  final HttpServletResponse response) throws IOException {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        Session session = this.theSecurityService.loginOAuthMicrosoft(body.get("idToken"));
+
+        if (session != null) {
+            theResponse.put("session", session);
+        } else {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        }
         return theResponse;
     }
 
