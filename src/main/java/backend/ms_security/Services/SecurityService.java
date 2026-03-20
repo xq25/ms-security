@@ -3,6 +3,7 @@ package backend.ms_security.Services;
 import backend.ms_security.Models.Session;
 import backend.ms_security.Models.User;
 import backend.ms_security.Repositories.UserRepository;
+import com.google.firebase.auth.FirebaseToken;
 import org.apache.catalina.SessionIdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,12 +15,18 @@ import java.util.Date;
 public class SecurityService {
     @Autowired
     private UserService theUserService;
+
     @Autowired
     private EncryptionService theEncryptionService;
+
     @Autowired
     private JwtService theJwtService;
+
     @Autowired
     private SessionService theSessionService;
+
+    @Autowired
+    private FirebaseAuthService theFirebaseAuthService;
 
     public Session login(User theNewUser) {
         String token = null;
@@ -46,6 +53,39 @@ public class SecurityService {
         } else {
             return actualSession;
         }
+    }
+    public Session loginOAuth(String idToken) {
+        // 1. Verificar el token con Firebase
+        FirebaseToken firebaseToken = theFirebaseAuthService.verifyToken(idToken);
+        if (firebaseToken == null) return null;
+
+        // 2. Extraer datos del usuario desde el token
+        String email = firebaseToken.getEmail();
+        String name  = firebaseToken.getName();
+
+        // 3. Buscar si el usuario ya existe, si no, crearlo
+        User theActualUser = theUserService.findByEmail(email);
+        if (theActualUser == null) {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setName(name);
+            newUser.setPassword("OAUTH_USER"); // Sin contraseña real
+
+            /** Nota !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+             *  Preguntarle a felipe si esto esta bien, si debemos generar un usuario sin contrasena,
+             * eso podria significar que a la hora de iniciar session, solo con saber el correo.
+             * Ya podriamos entrar*/
+            theActualUser = theUserService.create(newUser);
+        }
+
+        // 4. Generar sesión (misma lógica que tu login manual)
+        Date expiryDate = theJwtService.getExpirationDate();
+        String token    = theJwtService.generateToken(theActualUser);
+
+        Session emptySession = theSessionService.create(new Session(token, expiryDate));
+        theUserService.addSession(theActualUser.getId(), emptySession.getId());
+
+        return theSessionService.findById(emptySession.getId());
     }
 
 
