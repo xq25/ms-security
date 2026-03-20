@@ -2,9 +2,7 @@ package backend.ms_security.Services;
 
 import backend.ms_security.Models.Session;
 import backend.ms_security.Models.User;
-import backend.ms_security.Repositories.UserRepository;
 import com.google.firebase.auth.FirebaseToken;
-import org.apache.catalina.SessionIdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +11,7 @@ import java.util.Date;
 
 @Service
 public class SecurityService {
+
     @Autowired
     private UserService theUserService;
 
@@ -28,25 +27,22 @@ public class SecurityService {
     @Autowired
     private FirebaseAuthService theFirebaseAuthService;
 
+    // =========================
+    // LOGIN MANUAL
+    // =========================
     public Session login(User theNewUser) {
         String token = null;
         Date expiryDate = null;
-
         Session actualSession = null;
 
-        //Validamos que el usuario que se desea loguear exista en nuestra base de datos.
         User theActualUser = this.theUserService.findByEmail(theNewUser.getEmail());
         if (theActualUser != null &&
-                theActualUser.getPassword().equals(theEncryptionService.convertSHA256(theNewUser.getPassword()))) { // Nos traemos la contraseña de la base de datos ( Cifrada ) y la comparamos con la que viene del front pero que vamos a encryptar
+                theActualUser.getPassword().equals(theEncryptionService.convertSHA256(theNewUser.getPassword()))) {
             expiryDate = theJwtService.getExpirationDate();
-            token = theJwtService.generateToken(theActualUser); // Generamos el token para el usuario logueado existosamente.
+            token = theJwtService.generateToken(theActualUser);
 
-            // Generamos la nueva session (Sin usuario)
             Session emptySession = theSessionService.create(new Session(token, expiryDate));
-            // Asignamos el usuario a la Session
-            theUserService.addSession(theActualUser.getId() ,emptySession.getId());
-
-            // Recargamos a la session con el usuario asociado
+            theUserService.addSession(theActualUser.getId(), emptySession.getId());
             actualSession = theSessionService.findById(emptySession.getId());
 
             return actualSession;
@@ -54,8 +50,13 @@ public class SecurityService {
             return actualSession;
         }
     }
-    public Session loginOAuth(String idToken) {
-        // 1. Verificar el token con Firebase
+
+    // =========================
+    // LOGIN OAUTH — MÉTODO GENÉRICO
+    // Reutilizado por Google, GitHub y Microsoft
+    // =========================
+    private Session loginOAuth(String idToken) {
+        // 1. Verificar el token con Firebase Admin SDK
         FirebaseToken firebaseToken = theFirebaseAuthService.verifyToken(idToken);
         if (firebaseToken == null) return null;
 
@@ -68,17 +69,12 @@ public class SecurityService {
         if (theActualUser == null) {
             User newUser = new User();
             newUser.setEmail(email);
-            newUser.setName(name);
-            newUser.setPassword("OAUTH_USER"); // Sin contraseña real
-
-            /** Nota !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-             *  Preguntarle a felipe si esto esta bien, si debemos generar un usuario sin contrasena,
-             * eso podria significar que a la hora de iniciar session, solo con saber el correo.
-             * Ya podriamos entrar*/
+            newUser.setName(name != null ? name : email); // GitHub a veces no devuelve nombre
+            newUser.setPassword("OAUTH_USER");
             theActualUser = theUserService.create(newUser);
         }
 
-        // 4. Generar sesión (misma lógica que tu login manual)
+        // 4. Generar sesión
         Date expiryDate = theJwtService.getExpirationDate();
         String token    = theJwtService.generateToken(theActualUser);
 
@@ -88,13 +84,25 @@ public class SecurityService {
         return theSessionService.findById(emptySession.getId());
     }
 
-
-    /*
-    public boolean permissionsValidation(final HttpServletRequest request,
-                                         @RequestBody Permission thePermission) {
-        boolean success=this.theValidatorsService.validationRolePermission(request,thePermission.getUrl(),thePermission.getMethod());
-        return success;
+    // =========================
+    // LOGIN CON GOOGLE
+    // =========================
+    public Session loginOAuthGoogle(String idToken) {
+        return this.loginOAuth(idToken);
     }
-    */
+
+    // =========================
+    // LOGIN CON GITHUB
+    // =========================
+    public Session loginOAuthGithub(String idToken) {
+        return this.loginOAuth(idToken);
+    }
+
+    // =========================
+    // LOGIN CON MICROSOFT
+    // =========================
+    public Session loginOAuthMicrosoft(String idToken) {
+        return this.loginOAuth(idToken);
+    }
 
 }
