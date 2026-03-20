@@ -27,13 +27,22 @@ public class SecurityService {
     @Autowired
     private FirebaseAuthService theFirebaseAuthService;
 
+    @Autowired
+    private CaptchaService theCaptchaService;
+
     // =========================
     // LOGIN MANUAL
     // =========================
-    public Session login(User theNewUser) {
+    public Session login(User theNewUser, String captchaToken) {
         String token = null;
         Date expiryDate = null;
         Session actualSession = null;
+
+        // 1. Validar captcha antes de cualquier cosa
+        if (!theCaptchaService.validate(captchaToken)) {
+            System.out.println("❌ Captcha inválido o score bajo");
+            return null;
+        }
 
         User theActualUser = this.theUserService.findByEmail(theNewUser.getEmail());
         if (theActualUser != null &&
@@ -51,10 +60,6 @@ public class SecurityService {
         }
     }
 
-    // =========================
-    // LOGIN OAUTH — MÉTODO GENÉRICO
-    // Reutilizado por Google, GitHub y Microsoft
-    // =========================
     private Session loginOAuth(String idToken) {
         // 1. Verificar el token con Firebase Admin SDK
         FirebaseToken firebaseToken = theFirebaseAuthService.verifyToken(idToken);
@@ -84,23 +89,17 @@ public class SecurityService {
         return theSessionService.findById(emptySession.getId());
     }
 
-    // =========================
     // LOGIN CON GOOGLE
-    // =========================
     public Session loginOAuthGoogle(String idToken) {
         return this.loginOAuth(idToken);
     }
 
-    // =========================
     // LOGIN CON GITHUB
-    // =========================
     public Session loginOAuthGithub(String idToken) {
         return this.loginOAuth(idToken);
     }
 
-    // =========================
     // LOGIN CON MICROSOFT
-    // =========================
     public Session loginOAuthMicrosoft(String idToken) {
         return this.loginOAuth(idToken);
     }
