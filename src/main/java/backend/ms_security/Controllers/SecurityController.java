@@ -18,6 +18,22 @@ public class SecurityController {
     @Autowired
     private SecurityService theSecurityService;
 
+    // Register Manual
+    @PostMapping("register")
+    public HashMap<String, Object> register(@RequestBody User newUser,
+                                            final HttpServletResponse response) throws IOException {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        Session session = this.theSecurityService.register(newUser);
+
+        if (session != null) {
+            theResponse.put("session", session);
+        } else {
+            // 409 Conflict — el correo ya está registrado
+            response.sendError(HttpServletResponse.SC_CONFLICT);
+        }
+        return theResponse;
+    }
+
     // LOGIN MANUAL (con captcha)
     @PostMapping("login")
     public HashMap<String, Object> login(@RequestBody HashMap<String, String> body,
@@ -83,6 +99,14 @@ public class SecurityController {
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         }
+        return theResponse;
+    }
+
+    @GetMapping("user-exist/email/{email}")
+    public HashMap<String, Object> userExistByEmail(@PathVariable String email) {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        boolean available = this.theSecurityService.existUserByEmail(email);
+        theResponse.put("available", available); // true = correo disponible, false = ya existe
         return theResponse;
     }
 
