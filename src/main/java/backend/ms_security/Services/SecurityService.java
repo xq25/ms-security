@@ -1,5 +1,6 @@
 package backend.ms_security.Services;
 
+import backend.ms_security.Models.Profile;
 import backend.ms_security.Models.Session;
 import backend.ms_security.Models.User;
 import com.google.firebase.auth.FirebaseToken;
@@ -30,9 +31,36 @@ public class SecurityService {
     @Autowired
     private CaptchaService theCaptchaService;
 
-    // =========================
+    @Autowired
+    private ProfileService theProfileService;
+
+    // Manual Register
+    public Session register(User newUser){
+        User theActualUser = this.theUserService.findByEmail(newUser.getEmail());
+
+        // Validamos que no exista un usuario con el mismo correo
+        if (theActualUser == null){
+            // Generamos el usuario con los credenciales generados.
+            theActualUser = this.theUserService.create(newUser);
+            // Generamos un perfil vacio (por defecto)
+            Profile newProfile = this.theProfileService.create(new Profile());
+
+            this.theUserService.addProfile(theActualUser.getId(), newProfile.getId());
+
+
+            Date expiryDate = theJwtService.getExpirationDate();
+            String token    = theJwtService.generateToken(theActualUser);
+
+            Session emptySession = theSessionService.create(new Session(token, expiryDate));
+            theUserService.addSession(theActualUser.getId(), emptySession.getId());
+
+            return theSessionService.findById(emptySession.getId());
+
+        }
+        return null;
+    }
+
     // LOGIN MANUAL
-    // =========================
     public Session login(User theNewUser, String captchaToken) {
         String token = null;
         Date expiryDate = null;
@@ -71,14 +99,18 @@ public class SecurityService {
 
         // 3. Buscar si el usuario ya existe, si no, crearlo
         User theActualUser = theUserService.findByEmail(email);
+
         if (theActualUser == null) {
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setName(name != null ? name : email); // GitHub a veces no devuelve nombre
             newUser.setPassword("OAUTH_USER");
             theActualUser = theUserService.create(newUser);
-        }
 
+            Profile newProfile = this.theProfileService.create(new Profile());
+
+            this.theUserService.addProfile(theActualUser.getId(), newProfile.getId());
+        }
         // 4. Generar sesión
         Date expiryDate = theJwtService.getExpirationDate();
         String token    = theJwtService.generateToken(theActualUser);
@@ -103,5 +135,16 @@ public class SecurityService {
     public Session loginOAuthMicrosoft(String idToken) {
         return this.loginOAuth(idToken);
     }
+
+    public boolean existUserByEmail(String email){
+        User theUserValidation = this.theUserService.findByEmail(email);
+        boolean validaiton = false;
+
+        if (theUserValidation == null){
+            validaiton = true;
+        }
+        return validaiton;
+    }
+
 
 }

@@ -29,6 +29,9 @@ public class UserController {
         return this.theUserService.findById(id);
     }
 
+    @GetMapping("email/{email}")
+    public User findByEmail(@PathVariable String email){return  this.theUserService.findByEmail(email); }
+
     @PostMapping // Asociado directamente a los metodos de creacion(No asignamos un metodo especifico)
     public User create(@RequestBody User newUser) { // Pedimos extraer el body para almaacenarlo como una variable
         return this.theUserService.create(newUser);
