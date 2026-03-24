@@ -24,31 +24,62 @@ public class JwtService {
 
     private Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
+    // GENERAR TOKEN (expiracion por defecto)
     public String generateToken(User theUser) {
-        //  Calculamos la fecha de expiracion del token
+        return buildToken(theUser, expiration);
+    }
+
+    // GENERAR TOKEN (expiracion personalizada en ms)
+    public String generateTemporalToken(User theUser, long customExpiration) {
+        return buildToken(theUser, customExpiration);
+    }
+
+    // Privatizamos el metodo de construccion del token, y lo reutilizamos para las dos versiones de token que hay en nuestro sistema.
+    private String buildToken(User theUser, long expirationMs) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration);
+        Date expiryDate = new Date(now.getTime() + expirationMs);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", theUser.getId());
         claims.put("name", theUser.getName());
         claims.put("email", theUser.getEmail());
 
-        return Jwts.builder() // Constructor del token
-                .setClaims(claims) // Payload
+        return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(theUser.getName())
                 .setIssuedAt(now)
-                .setExpiration(expiryDate) // Expiracion del token
-                .signWith(secretKey) // Firma del token
-                .compact(); // Lo compactamos dentro de una cadena de caracteres(String)
+                .setExpiration(expiryDate)
+                .signWith(secretKey)
+                .compact();
     }
 
+    public Date getExpirationFromToken(String token) {
+        try {
+            Jws<Claims> claimsJws = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token);
+
+            return claimsJws.getBody().getExpiration();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // METODO PARA OBTENER LA EXPIRACION DE UN TOKEN (Default)
     public Date getExpirationDate(){
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
         return expiryDate;
     }
 
+    // METODO PARA OBTENER LA EXPIRACION DE UN TOKEN (Temporal)
+    public Date getCustomExpirationDate(long customExpiration) {
+        Date now = new Date();
+        return new Date(now.getTime() + customExpiration);
+    }
+
+    // METODO DE VALIDACION DE TOKENS
     public boolean validateToken(String token) {
         try {
             Jws<Claims> claimsJws = Jwts.parserBuilder()
