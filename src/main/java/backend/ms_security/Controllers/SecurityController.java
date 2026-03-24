@@ -110,6 +110,23 @@ public class SecurityController {
         return theResponse;
     }
 
+    // HABILITACION TEMPORAL DE SESSSION PARA USUARIO (Restablecer Password)
+    @PostMapping("get-temporal-session")
+    public HashMap<String, Object> getTemporalSession(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        String token = body.get("token");
+
+        Session session = this.theSecurityService.getTemporalSession(token);
+
+        if (session != null) {
+            theResponse.put("session", session);
+        } else {
+            // 401 — token inválido o expirado
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        }
+        return theResponse;
+    }
+
     // VALIDACION DE EXISTENCIA DE USUARIO EN NUESTRA BASE DE DATOS (Mediante email).
     @GetMapping("user-exist/email/{email}")
     public HashMap<String, Object> userExistByEmail(@PathVariable String email) {

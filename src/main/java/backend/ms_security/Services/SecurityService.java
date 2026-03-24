@@ -189,6 +189,22 @@ public class SecurityService {
         return true;
     }
 
+    public Session getTemporalSession(String token) {
+        // 1. Reconstruir el usuario desde el token
+        User theTemporalUser = this.theJwtService.getUserFromToken(token);
+        if (theTemporalUser == null) return null;
+
+        // 2. Extraer la expiración directamente del token
+        Date expiryDate = this.theJwtService.getExpirationFromToken(token);
+
+        // 3. Crear la sesión temporal con la misma expiración del token
+        Session emptySession = theSessionService.create(new Session(token, expiryDate));
+        theUserService.addSession(theTemporalUser.getId(), emptySession.getId());
+
+        // 4. Retornar la sesión con el usuario asociado
+        return theSessionService.findById(emptySession.getId());
+    }
+
     // VALIDACION DE EXISTENCIA MEDIANTE (EMAIL)
     public boolean existUserByEmail(String email){
         User theUserValidation = this.theUserService.findByEmail(email);

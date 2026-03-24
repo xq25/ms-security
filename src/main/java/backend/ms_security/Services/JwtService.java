@@ -53,6 +53,19 @@ public class JwtService {
                 .compact();
     }
 
+    public Date getExpirationFromToken(String token) {
+        try {
+            Jws<Claims> claimsJws = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token);
+
+            return claimsJws.getBody().getExpiration();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     // METODO PARA OBTENER LA EXPIRACION DE UN TOKEN (Default)
     public Date getExpirationDate(){
         Date now = new Date();
