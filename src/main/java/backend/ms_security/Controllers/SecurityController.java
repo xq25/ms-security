@@ -18,14 +18,14 @@ public class SecurityController {
     @Autowired
     private SecurityService theSecurityService;
 
-    // Register Manual
+    // REGISTER MANUAL
     @PostMapping("register")
-    public HashMap<String, Object> register(@RequestBody User newUser,
-                                            final HttpServletResponse response) throws IOException {
+    public HashMap<String, Object> register(@RequestBody User newUser, final HttpServletResponse response) throws IOException {
         HashMap<String, Object> theResponse = new HashMap<>();
         Session session = this.theSecurityService.register(newUser);
 
         if (session != null) {
+
             theResponse.put("session", session);
         } else {
             // 409 Conflict — el correo ya está registrado
@@ -36,8 +36,7 @@ public class SecurityController {
 
     // LOGIN MANUAL (con captcha)
     @PostMapping("login")
-    public HashMap<String, Object> login(@RequestBody HashMap<String, String> body,
-                                         final HttpServletResponse response) throws IOException {
+    public HashMap<String, Object> login(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
         HashMap<String, Object> theResponse = new HashMap<>();
 
         // Extraemos los campos del body
@@ -58,8 +57,7 @@ public class SecurityController {
 
     // LOGIN CON GOOGLE
     @PostMapping("login/oauth/google")
-    public HashMap<String, Object> loginGoogle(@RequestBody HashMap<String, String> body,
-                                               final HttpServletResponse response) throws IOException {
+    public HashMap<String, Object> loginGoogle(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
         HashMap<String, Object> theResponse = new HashMap<>();
         Session session = this.theSecurityService.loginOAuthGoogle(body.get("idToken"));
 
@@ -73,8 +71,7 @@ public class SecurityController {
 
     // LOGIN CON GITHUB
     @PostMapping("login/oauth/github")
-    public HashMap<String, Object> loginGithub(@RequestBody HashMap<String, String> body,
-                                               final HttpServletResponse response) throws IOException {
+    public HashMap<String, Object> loginGithub(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
         HashMap<String, Object> theResponse = new HashMap<>();
         Session session = this.theSecurityService.loginOAuthGithub(body.get("idToken"));
 
@@ -86,11 +83,9 @@ public class SecurityController {
         return theResponse;
     }
 
-
     // LOGIN CON MICROSOFT
     @PostMapping("login/oauth/microsoft")
-    public HashMap<String, Object> loginMicrosoft(@RequestBody HashMap<String, String> body,
-                                                  final HttpServletResponse response) throws IOException {
+    public HashMap<String, Object> loginMicrosoft(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
         HashMap<String, Object> theResponse = new HashMap<>();
         Session session = this.theSecurityService.loginOAuthMicrosoft(body.get("idToken"));
 
@@ -102,11 +97,42 @@ public class SecurityController {
         return theResponse;
     }
 
+    // HABILITAR PROCESO DE RESTAURACION DE PASSWORD
+    @PostMapping("reset-password")
+    public HashMap<String, Object> resetPassword(@RequestBody HashMap<String, String> body) {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        String email = body.get("email");
+
+        this.theSecurityService.resetPassword(email);
+
+        // Siempre mostramos el mismo mensaje — no revelamos si el correo existe o no
+        theResponse.put("message", "Si tu correo está registrado, recibirás las instrucciones en breve.");
+        return theResponse;
+    }
+
+    // HABILITACION TEMPORAL DE SESSSION PARA USUARIO (Restablecer Password)
+    @PostMapping("get-temporal-session")
+    public HashMap<String, Object> getTemporalSession(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        String token = body.get("token");
+
+        Session session = this.theSecurityService.getTemporalSession(token);
+
+        if (session != null) {
+            theResponse.put("session", session);
+        } else {
+            // 401 — token inválido o expirado
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        }
+        return theResponse;
+    }
+
+    // VALIDACION DE EXISTENCIA DE USUARIO EN NUESTRA BASE DE DATOS (Mediante email).
     @GetMapping("user-exist/email/{email}")
     public HashMap<String, Object> userExistByEmail(@PathVariable String email) {
         HashMap<String, Object> theResponse = new HashMap<>();
-        boolean available = this.theSecurityService.existUserByEmail(email);
-        theResponse.put("available", available); // true = correo disponible, false = ya existe
+        boolean exists = this.theSecurityService.existUserByEmail(email);
+        theResponse.put("exists", exists); // true = Ya existe, false = Correo Disponible
         return theResponse;
     }
 
