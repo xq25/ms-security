@@ -22,6 +22,18 @@ public class UserRoleService {
     @Autowired
     private UserRepository theUserRepository;
 
+    public List<UserRole> getRolesByUser(String user_id){
+        List<UserRole> userRoles = null;
+        User theUser = this.theUserRepository.findById(user_id).orElse(null);
+
+        if (theUser != null ) {
+            userRoles = this.theUserRoleRepository.getRolesByUser(user_id);
+
+        }
+        return userRoles;
+
+    }
+
     public boolean addUserRole(String userId,
                                String roleId){
         User user=this.theUserRepository.findById(userId).orElse(null);
@@ -45,17 +57,6 @@ public class UserRoleService {
         }
     }
 
-    public boolean getRolesByUser(String user_id){
-        List<UserRole> userRoles = null;
-        User theUser = this.theUserRepository.findById(user_id).orElse(null);
 
-        if (theUser != null ){
-            userRoles = this.theUserRoleRepository.getRolesByUser(user_id);
-            System.out.println("entre");
-            return true;
-        }
-        return false;
-
-    }
 
 }
