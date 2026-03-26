@@ -18,8 +18,8 @@ public class UserRoleController {
     @Autowired
     private UserRoleService theUserRoleService;
 
-    @GetMapping("user/{user_id})")
-    public boolean getRolesByUser(@PathVariable String user_id){
+    @GetMapping("user/{user_id}")
+    public List<UserRole> getRolesByUser(@PathVariable String user_id){
         return this.theUserRoleService.getRolesByUser(user_id);
 
     }
