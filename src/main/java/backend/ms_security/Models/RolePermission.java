@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class RolePermission {
     @Id
-    private String Id;
+    private String id;
 
     @DBRef
     private Role role;
