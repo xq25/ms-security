@@ -1,11 +1,14 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.Models.RolePermission;
+import backend.ms_security.Models.UserRole;
 import backend.ms_security.Services.RolePermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @CrossOrigin
@@ -14,6 +17,11 @@ import java.util.Map;
 public class RolePermissionController {
     @Autowired
     private RolePermissionService theService ;
+
+    @GetMapping("role/{role_id}")
+    public List<RolePermission> getRolesByUser(@PathVariable String role_id){
+        return this.theService.getPermissionsByRole(role_id);
+    }
 
     // Agregamos la relacion entre roles y permisos
     @PostMapping("role/{role_id}/permission/{permission_id}")

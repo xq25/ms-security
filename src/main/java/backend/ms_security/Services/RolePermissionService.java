@@ -9,6 +9,8 @@ import backend.ms_security.Repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class RolePermissionService {
 
@@ -20,6 +22,10 @@ public class RolePermissionService {
 
     @Autowired
     private PermissionRepository thePermissionRepository;
+
+    public List<RolePermission> getPermissionsByRole(String role_id){
+        return this.theRolePermissionRepository.getPermissionsByRole(role_id);
+    }
 
     public boolean addRolePermission(String role_id, String permission_id){
         Role role = this.theRoleRepository.findById(role_id).orElse(null);
@@ -37,6 +43,7 @@ public class RolePermissionService {
 
     public boolean removeRolePermission(String role_permission_id){
         RolePermission removeRolePermission = this.theRolePermissionRepository.findById(role_permission_id).orElse(null);
+
         if (removeRolePermission != null){
             this.theRolePermissionRepository.delete(removeRolePermission);
             return true;
