@@ -16,6 +16,11 @@ public class ProfileService {
         return this.theProfileRepository.findAll();
     }
 
+    public Profile findProfileByUser(String user_id){
+        Profile test = this.theProfileRepository.findProfileByUserID(user_id);
+        return  test;
+    }
+
     public Profile findById(String id){
         Profile theProfile = this.theProfileRepository.findById(id).orElse(null);
         return theProfile;

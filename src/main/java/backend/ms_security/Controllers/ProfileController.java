@@ -25,6 +25,9 @@ public class ProfileController {
         return this.theProfileService.findById(id);
     }
 
+    @GetMapping("user/{user_id}")
+    public Profile findByUserID(@PathVariable String user_id){ return this.theProfileService.findProfileByUser(user_id); }
+
     @PostMapping
     public Profile create(@RequestBody Profile newProfile) {
         return this.theProfileService.create(newProfile);
