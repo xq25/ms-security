@@ -81,6 +81,7 @@ public class JwtService {
 
     // METODO DE VALIDACION DE TOKENS
     public boolean validateToken(String token) {
+        boolean validation = true;
         try {
             Jws<Claims> claimsJws = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
@@ -90,21 +91,20 @@ public class JwtService {
             // Verifica la expiración del token
             Date now = new Date();
             if (claimsJws.getBody().getExpiration().before(now)) {
-                return false;
+                validation = false;
             }
-
-            return true;
         } catch (SignatureException ex) {
             // La firma del token es inválida
-            return false;
+            validation = false;
         } catch (Exception e) {
             // Otra excepción
-            return false;
+            validation =  false;
         }
+        return validation;
     }
 
-    /*
-    Metodo encargaado de devolvernos el usuario al cual pertence el token( Re armar el usuario con el token )
+    /**
+     *Metodo encargaado de devolvernos el usuario al cual pertence el token( Re armar el usuario con el token )
      */
     public User getUserFromToken(String token) {
         try {

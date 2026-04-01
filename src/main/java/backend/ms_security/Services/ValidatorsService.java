@@ -71,7 +71,6 @@ public class ValidatorsService {
     /**Obtiene o analiza el token y decifra dichos datos para poder re armar al usuario
      * @request : Contiene el token en el header.
      *
-
      */
     public User getUser(final HttpServletRequest request) {
         User theUser=null;
@@ -85,9 +84,15 @@ public class ValidatorsService {
             String token = authorizationHeader.substring(BEARER_PREFIX.length());// Recortamos todo el autoriztion para quedarnoiss solo con el contenido del token
             System.out.println("Bearer Token: " + token);
 
+            // Validamos que el token no haya expirado
+            boolean validateToken = this.jwtService.validateToken(token);
+            if (validateToken){
+                // Desactivamos la seccion del usuario.
+            }
+
             // Del token devuelve al usuario
             User theUserFromToken=jwtService.getUserFromToken(token); // instancia de usuario.
-            if(theUserFromToken!=null) {
+            if(theUserFromToken!=null && validateToken) { // Solo precargamos al usuario si el token es valido y existe el usuario para ese token
                 //Pre carga del usuario. Tenemos que traer el usuario desde la base de datos ya que este ya contiene las relaciones.
                 theUser= this.theUserRepository.findById(theUserFromToken.getId())
                         .orElse(null);
