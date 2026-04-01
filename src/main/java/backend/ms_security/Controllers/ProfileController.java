@@ -1,6 +1,7 @@
 package backend.ms_security.Controllers;
 
 import backend.ms_security.Models.Profile;
+import backend.ms_security.Services.PhotoService;
 import backend.ms_security.Services.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

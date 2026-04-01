@@ -15,6 +15,7 @@ public class Session {
     private String token;
     private Date expiration;
     private String code2FA;
+    private boolean active;
 
     @DBRef
     private User user;
@@ -28,6 +29,7 @@ public class Session {
         this.token = token;
         this.expiration = expiration;
         this.code2FA = code2FA;
+        this.active = true;
         this.user = user;
     }
 
@@ -35,5 +37,6 @@ public class Session {
         this.token = token;
         this.expiration = expiration;
         this.code2FA = "NOT-FOUND";
+        this.active = true;
     }
 }

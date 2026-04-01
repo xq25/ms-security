@@ -55,8 +55,8 @@ public class SecurityService {
             this.theUserService.addProfile(theActualUser.getId(), newProfile.getId());
 
 
-            Date expiryDate = theJwtService.getExpirationDate();
             String token    = theJwtService.generateToken(theActualUser);
+            Date expiryDate = theJwtService.getExpirationFromToken(token);
 
             Session emptySession = theSessionService.create(new Session(token, expiryDate));
             theUserService.addSession(theActualUser.getId(), emptySession.getId());
@@ -88,8 +88,9 @@ public class SecurityService {
         User theActualUser = this.theUserService.findByEmail(theNewUser.getEmail());
         if (theActualUser != null &&
                 theActualUser.getPassword().equals(theEncryptionService.convertSHA256(theNewUser.getPassword()))) {
-            expiryDate = theJwtService.getExpirationDate();
+
             token = theJwtService.generateToken(theActualUser);
+            expiryDate = theJwtService.getExpirationFromToken(token);
 
             Session emptySession = theSessionService.create(new Session(token, expiryDate));
             theUserService.addSession(theActualUser.getId(), emptySession.getId());
@@ -126,8 +127,9 @@ public class SecurityService {
             this.theUserService.addProfile(theActualUser.getId(), newProfile.getId());
         }
         // 4. Generar sesión
-        Date expiryDate = theJwtService.getExpirationDate();
         String token    = theJwtService.generateToken(theActualUser);
+        Date expiryDate = theJwtService.getExpirationFromToken(token);
+
 
         Session emptySession = theSessionService.create(new Session(token, expiryDate));
         theUserService.addSession(theActualUser.getId(), emptySession.getId());
@@ -150,7 +152,7 @@ public class SecurityService {
         return this.loginOAuth(idToken);
     }
 
-    /**
+    /** RESET PASSWORD
      * @Param email -> Email registrado por el usuario para la recuperacion de su contrasena.
      * 1. Validamos que el emial exista en nuestra base de datos.
      *  1.2 Si existe, nos comunicamos con el microservicio de notificaciones,
@@ -189,6 +191,7 @@ public class SecurityService {
         return true;
     }
 
+    // OBTENER LA SESSION TEMPORAL(PARA PROCESO DE RESET- PASSWORD)
     public Session getTemporalSession(String token) {
         // 1. Reconstruir el usuario desde el token
         User theTemporalUser = this.theJwtService.getUserFromToken(token);
