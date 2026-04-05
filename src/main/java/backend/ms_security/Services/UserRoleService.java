@@ -34,8 +34,19 @@ public class UserRoleService {
 
     }
 
-    public boolean addUserRole(String userId,
-                               String roleId){
+    public List<UserRole> getUsersByRole(String role_id){
+        List<UserRole> userRoles = null;
+        Role theRole = this.theRoleRepository.findById(role_id).orElse(null);
+
+        if (theRole != null ) {
+            userRoles = this.theUserRoleRepository.getUsersByRole(role_id);
+
+        }
+        return userRoles;
+
+    }
+
+    public boolean addUserRole(String userId, String roleId){
         User user=this.theUserRepository.findById(userId).orElse(null);
         Role role=this.theRoleRepository.findById(roleId).orElse(null);
         if (user!=null && role!=null){

@@ -3,10 +3,12 @@ package backend.ms_security.Services;
 import backend.ms_security.Models.Profile;
 import backend.ms_security.Models.Session;
 import backend.ms_security.Models.User;
+import backend.ms_security.Models.UserRole;
 import backend.ms_security.Repositories.ProfileRepository;
 import backend.ms_security.Repositories.SessionRepository;
 import backend.ms_security.Repositories.UserRepository;
 
+import backend.ms_security.Repositories.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,9 @@ public class UserService {
 
     @Autowired
     private SessionRepository theSessionRepository;
+
+    @Autowired
+    private UserRoleRepository theUserRoleRepository;
 
     @Autowired // Inyectamos el servicio de encryptado para a la hora de generar o actualizar un usuario poder encryptar la contraseña.
     private EncryptionService theEncryption;
@@ -70,7 +75,21 @@ public class UserService {
 
     public boolean delete(String id){
         User theUser=this.theUserRepository.findById(id).orElse(null);
-        if (theUser!=null){
+        if(theUser != null) {
+
+            // 1. Eliminamos el perfil asociado al usuario
+            Profile userProfile = this.theProfileRepository.findProfileByUserID(theUser.getId());
+            if (userProfile != null) {
+                this.theProfileRepository.delete(userProfile);
+            }
+
+            // 2. Eliminamos todos los roles asociados al usuario
+            List<UserRole> roles = this.theUserRoleRepository.getRolesByUser(id);
+            if (roles != null && !roles.isEmpty()) {
+                this.theUserRoleRepository.deleteAll(roles); // ← deleteAll recibe una lista directamente
+            }
+            // 3. Eliminamos las sesiones asociadas al usuario
+
             this.theUserRepository.delete(theUser);
             return true;
         }
@@ -94,6 +113,7 @@ public class UserService {
         }
 
     }
+
     public boolean removeProfile(String user_id, String profile_id){
         User user = this.theUserRepository.findById(user_id).orElse(null);
         Profile profile = this.theProfileRepository.findById(profile_id).orElse(null);
@@ -106,6 +126,7 @@ public class UserService {
             return false;
         }
     }
+
 //---- Enlace con las Sessiones -----
     /**
      * Permite asociar un usuario y una sesión. Para que funcione ambos
@@ -125,6 +146,7 @@ public class UserService {
             return false;
         }
     }
+
     /*Des enlazamos la relacion entre un usuario y una session especifica*/
     public boolean removeSession(String user_id,String session_id){
         User theUser=this.theUserRepository.findById(user_id).orElse(null);

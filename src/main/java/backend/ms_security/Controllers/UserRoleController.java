@@ -24,10 +24,13 @@ public class UserRoleController {
 
     }
 
+    @GetMapping("role/{role_id}")
+    public List<UserRole> getUsersByRole(@PathVariable String role_id){
+        return this.theUserRoleService.getUsersByRole(role_id);
+    }
+
     @PostMapping("user/{userId}/role/{roleId}")
-    public ResponseEntity<Map<String, String>> addUserRole(
-            @PathVariable String userId,
-            @PathVariable String roleId) {
+    public ResponseEntity<Map<String, String>> addUserRole(@PathVariable String userId, @PathVariable String roleId) {
 
         boolean response = this.theUserRoleService.addUserRole(userId, roleId);
         if (response) {
@@ -38,9 +41,9 @@ public class UserRoleController {
                     .body(Map.of("message", "User or Role not found"));
         }
     }
+
     @DeleteMapping("{userRoleId}")
-    public ResponseEntity<Map<String, String>> removeUserRole(
-            @PathVariable String userRoleId) {
+    public ResponseEntity<Map<String, String>> removeUserRole(@PathVariable String userRoleId) {
 
         boolean response = this.theUserRoleService.removeUserRole(userRoleId);
         if (response) {

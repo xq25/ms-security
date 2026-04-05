@@ -19,15 +19,18 @@ public class RolePermissionController {
     private RolePermissionService theService ;
 
     @GetMapping("role/{role_id}")
-    public List<RolePermission> getRolesByUser(@PathVariable String role_id){
+    public List<RolePermission> getPermissionsByRole(@PathVariable String role_id){
         return this.theService.getPermissionsByRole(role_id);
+    }
+
+    @GetMapping("permission/{permission_id}")
+    public List<RolePermission> getRolesByPermission(@PathVariable String permission_id){
+        return this.theService.getRolesByPermission(permission_id);
     }
 
     // Agregamos la relacion entre roles y permisos
     @PostMapping("role/{role_id}/permission/{permission_id}")
-    public ResponseEntity<Map<String, String>> addRolePermission(
-            @PathVariable String role_id,
-            @PathVariable String permission_id) {
+    public ResponseEntity<Map<String, String>> addRolePermission(@PathVariable String role_id, @PathVariable String permission_id) {
 
         boolean response = this.theService.addRolePermission(role_id, permission_id);
         if (response) {
@@ -38,10 +41,10 @@ public class RolePermissionController {
                     .body(Map.of("message", "Role or Permission not found"));
         }
     }
+
     //Eliminamos la relacion entre roles y permisos
     @DeleteMapping("{role_permission_id}")
-    public ResponseEntity<Map<String, String>> removeRolePermission(
-            @PathVariable String role_permission_id) {
+    public ResponseEntity<Map<String, String>> removeRolePermission(@PathVariable String role_permission_id) {
 
         boolean response = this.theService.removeRolePermission(role_permission_id);
         if (response) {
