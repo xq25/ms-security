@@ -1,8 +1,10 @@
 package backend.ms_security.Services;
 
 import backend.ms_security.Models.Permission;
+import backend.ms_security.Models.RolePermission;
 import backend.ms_security.Repositories.PermissionRepository;
 
+import backend.ms_security.Repositories.RolePermissionRepository;
 import backend.ms_security.Repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,8 +18,7 @@ public class PermissionService {
     private PermissionRepository thePermissionRepository;
 
     @Autowired
-    private RoleRepository theRoleRepository;
-
+    private RolePermissionRepository theRolePermissionRepository;
     // getAll() -> List<Permission>
     public List<Permission> find() {
         return this.thePermissionRepository.findAll();
@@ -50,12 +51,21 @@ public class PermissionService {
         }
     }
 
-    public void delete(String id) {
-        Permission thePermission =
-                this.thePermissionRepository.findById(id).orElse(null);
+    public boolean delete(String id) {
+        Permission thePermission = this.thePermissionRepository.findById(id).orElse(null);
 
         if (thePermission != null) {
+
+            List<RolePermission> roles = this.theRolePermissionRepository.getRolesByPermission(thePermission.getId());
+
+            if (roles != null && !roles.isEmpty()){
+                this.theRolePermissionRepository.deleteAll(roles);
+            }
             this.thePermissionRepository.delete(thePermission);
+            return true;
+        }
+        else{
+            return false;
         }
     }
 

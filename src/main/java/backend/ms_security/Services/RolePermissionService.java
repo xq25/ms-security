@@ -27,6 +27,10 @@ public class RolePermissionService {
         return this.theRolePermissionRepository.getPermissionsByRole(role_id);
     }
 
+    public List<RolePermission> getRolesByPermission(String permission_id){
+        return this.theRolePermissionRepository.getRolesByPermission(permission_id);
+    }
+
     public boolean addRolePermission(String role_id, String permission_id){
         Role role = this.theRoleRepository.findById(role_id).orElse(null);
         Permission permission = this.thePermissionRepository.findById(permission_id).orElse(null);
