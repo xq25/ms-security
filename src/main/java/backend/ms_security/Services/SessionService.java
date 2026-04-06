@@ -21,9 +21,6 @@ public class SessionService {
         return this.theSessionRepository.findById(id).orElse(null);
     }
 
-    /**Nota!:
-     * Que tan buena idea es generar el session desde el front, generar dicho objeto alli mismo??, no es mas inseguro ? porque podria pasar todos los tiempos predefinidos
-     * */
     public Session create(Session newSession){
         return this.theSessionRepository.save(newSession);
     }
@@ -36,6 +33,7 @@ public class SessionService {
             actualSession.setExpiration(newSession.getExpiration());
             actualSession.setCode2FA(newSession.getCode2FA());
             actualSession.setUser(newSession.getUser());
+            actualSession.setActive(newSession.isActive());
             this.theSessionRepository.save(actualSession);
             return actualSession;
         } else {
@@ -48,6 +46,24 @@ public class SessionService {
         if(theSession != null){
             this.theSessionRepository.delete(theSession);
         }
+    }
+
+    // Validaciones :
+    public boolean invalidateSession(String id){
+        Session theSession = this.theSessionRepository.findById(id).orElse(null);
+        boolean validateProcess = false;
+
+        if (theSession != null ){
+            theSession.setActive(false);
+            this.theSessionRepository.save(theSession);
+            validateProcess = true;
+        }
+        return validateProcess;
+    }
+
+    public boolean isTokenAlreadyUsed(String token) {
+        Session usedSession = this.theSessionRepository.findInvalidatedSessionByToken(token);
+        return usedSession != null; // true = ya fue usado
     }
 }
 

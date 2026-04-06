@@ -73,6 +73,11 @@ public class SecurityService {
         return null;
     }
 
+    // LOGOUT
+    public boolean logout(String current_session_id){
+        return this.theSessionService.invalidateSession(current_session_id);
+    }
+
     // LOGIN MANUAL
     public Session login(User theNewUser, String captchaToken) {
         String token = null;
@@ -200,6 +205,12 @@ public class SecurityService {
         // 2. Extraer la expiración directamente del token
         Date expiryDate = this.theJwtService.getExpirationFromToken(token);
 
+        // 2.1 Validamos que no exista ya una session activa con ese token
+        if (this.theSessionService.isTokenAlreadyUsed(token)) {
+            System.out.println("❌ Token ya utilizado, acceso denegado");
+            return null; //  El controller devolverá 401
+        }
+
         // 3. Crear la sesión temporal con la misma expiración del token
         Session emptySession = theSessionService.create(new Session(token, expiryDate));
         theUserService.addSession(theTemporalUser.getId(), emptySession.getId());
@@ -218,6 +229,5 @@ public class SecurityService {
         }
         return validaiton;
     }
-
 
 }

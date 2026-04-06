@@ -34,6 +34,19 @@ public class SecurityController {
         return theResponse;
     }
 
+    @PutMapping("logout")
+    public HashMap<String, Object> logout(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
+        HashMap<String, Object> theResponse = new HashMap<>();
+        boolean success = this.theSecurityService.logout(body.get("id"));
+
+        if (success) {
+            theResponse.put("message", "Sesión cerrada correctamente");
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+        return theResponse;
+    }
+
     // LOGIN MANUAL (con captcha)
     @PostMapping("login")
     public HashMap<String, Object> login(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
