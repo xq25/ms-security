@@ -22,6 +22,7 @@ public class JwtService {
     @Value("${jwt.expiration}") // (Expiracion del token).
     private Long expiration; // Tiempo de expiración del token en milisegundos.
 
+    // CADA VEZ QUE SE CORRE EL PROGRAMA SE GENERA UNA NUEVA SECRET KEY (POR TANTO, NO PUEDE HABER UNA SESSION VALIDA, ANTES DE CORRER NUEVAMENTE EL PROGRAMA)
     private Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     // GENERAR TOKEN (expiracion por defecto)
@@ -95,6 +96,7 @@ public class JwtService {
             }
         } catch (SignatureException ex) {
             // La firma del token es inválida
+            System.out.println(ex.getCause());
             validation = false;
         } catch (Exception e) {
             // Otra excepción
