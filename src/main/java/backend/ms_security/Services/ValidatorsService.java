@@ -65,6 +65,8 @@ public class ValidatorsService {
                 i+=1;
             }
 
+        }else{
+            // Proceso de enviar una restriccion especifica. Ya que el token es invalido
         }
         return success;
     }
@@ -88,6 +90,7 @@ public class ValidatorsService {
             boolean validateToken = this.jwtService.validateToken(token);
             if (validateToken){
                 // Desactivamos la seccion del usuario.
+                System.out.println("Token Valido");
             }
 
             // Del token devuelve al usuario
@@ -99,6 +102,7 @@ public class ValidatorsService {
 
             }
         }
+
         return theUser;
     }
 }

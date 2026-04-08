@@ -1,12 +1,16 @@
 package backend.ms_security.interceptors;
 
 import backend.ms_security.Services.ValidatorsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.HashMap;
+import java.util.Map;
 
 // Porteria de la aplicacion
 @Component
@@ -25,6 +29,21 @@ public class SecurityInterceptor implements HandlerInterceptor {
             throws Exception {
         // Aqui se hacen todas las respectivas validaciones.
         boolean validation = this.validatorService.validationRolePermission(request,request.getRequestURI(),request.getMethod());
+
+        if (!validation) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("status", 403);
+            body.put("error", "Forbidden");
+            body.put("message", "No tienes permiso para realizar esta acción.");
+
+            new ObjectMapper().writeValue(response.getWriter(), body);
+            return false; // Corta el flujo limpiamente, sin excepciones
+        }
+
         return validation;
     }
 
