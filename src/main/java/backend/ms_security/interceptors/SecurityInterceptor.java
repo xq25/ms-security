@@ -1,10 +1,12 @@
 package backend.ms_security.interceptors;
 
+import backend.ms_security.Models.ValidationResult;
 import backend.ms_security.Services.ValidatorsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -25,26 +27,54 @@ public class SecurityInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,
-                             Object handler)
-            throws Exception {
-        // Aqui se hacen todas las respectivas validaciones.
-        boolean validation = this.validatorService.validationRolePermission(request,request.getRequestURI(),request.getMethod());
+                             Object handler) throws Exception {
 
-        if (!validation) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-
-            Map<String, Object> body = new HashMap<>();
-            body.put("status", 403);
-            body.put("error", "Forbidden");
-            body.put("message", "No tienes permiso para realizar esta acción.");
-
-            new ObjectMapper().writeValue(response.getWriter(), body);
-            return false; // Corta el flujo limpiamente, sin excepciones
+        // El preflight CORS no trae Authorization por diseño.
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+            return true;
         }
 
-        return validation;
+        System.out.println("[SecurityInterceptor] " + request.getMethod() + " " + request.getRequestURI());
+
+        ValidationResult result = this.validatorService.validationRolePermission(
+                request, request.getRequestURI(), request.getMethod()
+        );
+
+        if (result == ValidationResult.SUCCESS) {
+            return true;
+        }
+
+        // Construimos el mensaje según el resultado
+        int status;
+        String message;
+
+        switch (result) {
+            case INVALID_TOKEN -> {
+                status  = HttpServletResponse.SC_UNAUTHORIZED; // 401
+                message = "Token inválido o sesión expirada.";
+            }
+            case PERMISSION_DENIED -> {
+                status  = HttpServletResponse.SC_FORBIDDEN; // 403
+                message = "No tienes permiso para realizar esta acción.";
+            }
+            // Agregamos el estado por defecto por motivos de seguridad. Por defecto es mejor negar el acceso que concederlo.
+            default -> {
+                status  = HttpServletResponse.SC_FORBIDDEN;
+                message = "Acceso denegado.";
+            }
+        }
+
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", status);
+        body.put("error", result.name());
+        body.put("message", message);
+
+        new ObjectMapper().writeValue(response.getWriter(), body);
+        return false;
     }
 
     /// Todo lo que salga del backend va pasar por aqui. Esto para validar el Response.
