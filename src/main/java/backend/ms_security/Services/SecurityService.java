@@ -1,14 +1,16 @@
 package backend.ms_security.Services;
 
-import backend.ms_security.Models.Profile;
-import backend.ms_security.Models.Session;
-import backend.ms_security.Models.User;
-import com.google.firebase.auth.FirebaseToken;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import com.google.firebase.auth.FirebaseToken;
+
+import backend.ms_security.Models.Profile;
+import backend.ms_security.Models.Session;
+import backend.ms_security.Models.User;
 
 
 @Service
@@ -83,6 +85,7 @@ public class SecurityService {
         String token = null;
         Date expiryDate = null;
         Session actualSession = null;
+        String code2FA = null;
 
         // 1. Validar captcha antes de cualquier cosa
         if (!theCaptchaService.validate(captchaToken)) {
@@ -96,10 +99,20 @@ public class SecurityService {
 
             token = theJwtService.generateToken(theActualUser);
             expiryDate = theJwtService.getExpirationFromToken(token);
+            code2FA = theJwtService.generateCode2FA(); // Generamos un código de 6 dígitos para 2FA  
 
-            Session emptySession = theSessionService.create(new Session(token, expiryDate));
+            Session emptySession = theSessionService.create(new Session(token,expiryDate,code2FA));
+            
             theUserService.addSession(theActualUser.getId(), emptySession.getId());
             actualSession = theSessionService.findById(emptySession.getId());
+
+            // Enviamos el código 2FA al correo del usuario
+            String body = "Hola " + theActualUser.getName() + ",\n\n"
+                    + "Tu código de autenticación de dos factores es: " + code2FA + "\n"
+                    + "⚠️ Este código expira en 5 minutos.\n\n"
+                    + "Si no solicitaste esto, ignora este mensaje.\n\n"
+                    + "El equipo de MS Security";
+            theNotificationService.sendEmail(theActualUser.getEmail(), body);
 
             return actualSession;
         } else {
@@ -228,6 +241,18 @@ public class SecurityService {
             validaiton = true;
         }
         return validaiton;
+    }
+    public boolean validatecode2FA(String code2FA, String sessionId){
+        Session theSession = this.theSessionService.findById(sessionId);
+        boolean validation = false;
+
+        if (theSession != null && theSession.getCode2FA() != null && theSession.getCode2FA().equals(code2FA)){
+            // Si el código es válido, activamos la sesión
+            theSession.setActive(true);
+            this.theSessionService.update(sessionId, theSession);
+            validation = true;
+        }
+        return validation;
     }
 
 }
