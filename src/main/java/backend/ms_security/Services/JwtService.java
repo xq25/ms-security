@@ -10,6 +10,7 @@ import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.security.Key;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,5 +131,10 @@ public class JwtService {
         }
     }
 
+    public String generateCode2FA(){
+        SecureRandom random = new SecureRandom();
+        int code = random.nextInt(10000);
+        return String.format("%06d", code);
+    }
 
 }

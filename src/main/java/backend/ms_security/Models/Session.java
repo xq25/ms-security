@@ -1,11 +1,12 @@
 package backend.ms_security.Models;
 
-import lombok.Data;
+import java.util.Date;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import lombok.Data;
 
 @Data
 @Document
@@ -38,5 +39,12 @@ public class Session {
         this.expiration = expiration;
         this.code2FA = "NOT-FOUND";
         this.active = true;
+    }
+
+    public Session(String token, Date expiration, String code2FA) {
+        this.token = token;
+        this.expiration = expiration;
+        this.code2FA = code2FA;
+        this.active = false;
     }
 }
