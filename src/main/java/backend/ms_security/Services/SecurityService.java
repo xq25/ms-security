@@ -86,6 +86,7 @@ public class SecurityService {
         Date expiryDate = null;
         Session actualSession = null;
         String code2FA = null;
+        Session session2FA = null;
 
         // 1. Validar captcha antes de cualquier cosa
         if (!theCaptchaService.validate(captchaToken)) {
@@ -102,9 +103,12 @@ public class SecurityService {
             code2FA = theJwtService.generateCode2FA(); // Generamos un código de 6 dígitos para 2FA  
 
             Session emptySession = theSessionService.create(new Session(token,expiryDate,code2FA));
-            
+
+            // Generamos las relaciones y actualizamos nuestros datos con los recien generados por la base de datos
             theUserService.addSession(theActualUser.getId(), emptySession.getId());
             actualSession = theSessionService.findById(emptySession.getId());
+
+            session2FA = new Session(actualSession.getId());
 
             // Enviamos el código 2FA al correo del usuario
             String body = "Hola " + theActualUser.getName() + ",\n\n"
@@ -114,9 +118,9 @@ public class SecurityService {
                     + "El equipo de MS Security";
             theNotificationService.sendEmail(theActualUser.getEmail(), body);
 
-            return actualSession;
+            return session2FA;//actualSession;
         } else {
-            return actualSession;
+            return session2FA;//actualSession;
         }
     }
 
@@ -242,17 +246,17 @@ public class SecurityService {
         }
         return validaiton;
     }
-    public boolean validatecode2FA(String code2FA, String sessionId){
+
+    public Session validatecode2FA(String code2FA, String sessionId){
         Session theSession = this.theSessionService.findById(sessionId);
         boolean validation = false;
 
         if (theSession != null && theSession.getCode2FA() != null && theSession.getCode2FA().equals(code2FA)){
             // Si el código es válido, activamos la sesión
             theSession.setActive(true);
-            this.theSessionService.update(sessionId, theSession);
-            validation = true;
+            return this.theSessionService.update(sessionId, theSession);
         }
-        return validation;
+        return null;
     }
 
 }

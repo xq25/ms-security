@@ -25,6 +25,15 @@ public class Session {
 
     }
 
+    public Session(String id){
+        this.id = id;
+        this.token = "NOT DEFINED";
+        this.expiration = null;
+        this.code2FA = "ON VALIDATION";
+        this.active = false;
+        this.user = null;
+    }
+
     public Session(String id, String token, Date expiration, String code2FA, User user) {
         this.id = id;
         this.token = token;

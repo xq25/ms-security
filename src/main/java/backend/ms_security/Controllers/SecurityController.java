@@ -69,7 +69,7 @@ public class SecurityController {
         Session session = this.theSecurityService.login(theNewUser, captchaToken);
 
         if (session != null) {
-            theResponse.put("session", session);
+            theResponse.put("session",session);
         } else {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         }
@@ -162,9 +162,18 @@ public class SecurityController {
         HashMap<String, Object> theResponse = new HashMap<>();
         String code2FA = body.get("code2FA");
         String sessionId = body.get("sessionId");
-        boolean isValid = this.theSecurityService.validatecode2FA(code2FA, sessionId);
-        
-        theResponse.put("isValid", isValid);
+        boolean isValid = false;
+
+         Session validSession = this.theSecurityService.validatecode2FA(code2FA, sessionId);
+
+         if (validSession != null){
+             isValid = true;
+             theResponse.put("session", validSession);
+
+         }
+         theResponse.put("isValid", isValid);
+
+
         return theResponse;
     }
 
