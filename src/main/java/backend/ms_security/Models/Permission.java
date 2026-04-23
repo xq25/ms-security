@@ -24,6 +24,10 @@ public class Permission {
         this.method = method;
         this.model  = model;
     }
+
+    public String getMethodValue() {
+        return method != null ? method.getValue() : null;
+    }
 }
 
 enum HttpMethods {

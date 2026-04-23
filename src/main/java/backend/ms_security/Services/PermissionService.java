@@ -31,6 +31,11 @@ public class PermissionService {
 
     // create() -> Permission
     public Permission create(Permission newPermission) {
+        Permission samePermission = this.thePermissionRepository.getPermission(newPermission.getUrl(), newPermission.getMethodValue());
+
+        if (samePermission != null){
+            return null;
+        }
         return this.thePermissionRepository.save(newPermission);
     }
 
