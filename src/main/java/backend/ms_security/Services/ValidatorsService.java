@@ -66,6 +66,7 @@ public class ValidatorsService {
         System.out.println("❌ El usuario no posee el permiso requerido");
         return ValidationResult.PERMISSION_DENIED;
     }
+
     /**Obtiene o analiza el token y decifra dichos datos para poder re armar al usuario
      * @request : Contiene el token en el header.
      *

@@ -2,15 +2,13 @@ package backend.ms_security.Services;
 
 import java.util.Date;
 
+import backend.ms_security.Models.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.firebase.auth.FirebaseToken;
-
-import backend.ms_security.Models.Profile;
-import backend.ms_security.Models.Session;
-import backend.ms_security.Models.User;
 
 
 @Service
@@ -39,6 +37,9 @@ public class SecurityService {
 
     @Autowired
     private NotificationService theNotificationService;
+
+    @Autowired
+    private ValidatorsService theValidatorService;
 
     @Value("${rest.expiration}")
     private Long RESET_TOKEN_EXPIRATION;
@@ -259,4 +260,13 @@ public class SecurityService {
         return null;
     }
 
+    public boolean permissionsValidation(final HttpServletRequest request, Permission permissionData){
+        ValidationResult result = this.theValidatorService.validationRolePermission(request, permissionData.getUrl(), permissionData.getMethodValue() );
+        boolean validation = false;
+
+        if (result == ValidationResult.SUCCESS){
+            validation = true;
+        }
+        return validation;
+    }
 }

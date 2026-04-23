@@ -3,6 +3,8 @@ package backend.ms_security.Controllers;
 import java.io.IOException;
 import java.util.HashMap;
 
+import backend.ms_security.Models.Permission;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -175,6 +177,11 @@ public class SecurityController {
 
 
         return theResponse;
+    }
+
+    @PostMapping("permissions-validation")
+    public boolean permissionsValidation(final HttpServletRequest request, @RequestBody Permission permissionData){
+        return this.theSecurityService.permissionsValidation(request, permissionData);
     }
 
 }

@@ -1,5 +1,7 @@
 package backend.ms_security.Controllers;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -8,6 +10,7 @@ import backend.ms_security.Services.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
@@ -28,8 +31,21 @@ public class PermissionController {
     }
 
     @PostMapping
-    public Permission create(@RequestBody Permission newPermission) {
-        return this.thePermissionService.create(newPermission);
+    public ResponseEntity<Map<String, Object>> create(@RequestBody Permission newPermission) {
+        Permission thePermission = this.thePermissionService.create(newPermission);
+
+        if (thePermission == null) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "El permiso con esas características ya existe"));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(Map.of(
+                        "message", "Permiso generado correctamente",
+                        "permission", thePermission
+                ));
     }
 
     @PutMapping("{id}")
