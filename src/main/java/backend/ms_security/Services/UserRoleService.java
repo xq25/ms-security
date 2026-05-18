@@ -46,6 +46,18 @@ public class UserRoleService {
 
     }
 
+    public UserRole getByUserAndRole(String userId, String roleId){
+        User user = this.theUserRepository.findById(userId).orElse(null);
+        Role role = this.theRoleRepository.findById(roleId).orElse(null);
+        UserRole userRole = null;
+
+        if (user != null && role != null){
+            userRole = this.theUserRoleRepository.getByUserIdAndRoleId(userId, roleId);
+        }
+        return userRole;
+
+    }
+
     public boolean addUserRole(String userId, String roleId){
         User user=this.theUserRepository.findById(userId).orElse(null);
         Role role=this.theRoleRepository.findById(roleId).orElse(null);
