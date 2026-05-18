@@ -98,6 +98,11 @@ public class UserService {
         }
     }
 
+    public boolean existUserById(String user_id){
+        User theUser=this.theUserRepository.findById(user_id).orElse(null);
+        return theUser != null;
+    }
+
 // ---- Enlace con los Perfiles ----
     /*Permite Asociar un usuario a un perfil, pero se debe generar previamente el perfil en nuestra base de datos.*/
     public boolean addProfile(String user_id, String profile_id){

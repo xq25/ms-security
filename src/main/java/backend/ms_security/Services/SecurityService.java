@@ -202,7 +202,7 @@ public class SecurityService {
                     + "Recibimos una solicitud para restablecer tu contraseña.\n"
                     + "Haz clic en el siguiente enlace para continuar:\n\n"
                     + resetLink + "\n\n"
-                    + "⚠️ Este enlace expira en 30 minutos.\n\n"
+                    + "⚠️ Este enlace expira en 5 minutos.\n\n"
                     + "Si no solicitaste esto, ignora este mensaje.\n\n"
                     + "El equipo de MS Security";
 
@@ -268,5 +268,9 @@ public class SecurityService {
             validation = true;
         }
         return validation;
+    }
+
+    public boolean existUserById(String user_id){
+        return this.theUserService.existUserById(user_id);
     }
 }
