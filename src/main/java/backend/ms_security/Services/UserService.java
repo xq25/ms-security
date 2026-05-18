@@ -33,6 +33,9 @@ public class UserService {
     @Autowired // Inyectamos el servicio de encryptado para a la hora de generar o actualizar un usuario poder encryptar la contraseña.
     private EncryptionService theEncryption;
 
+    @Autowired
+    private ClasificatorService clasificatorService;
+
     //getAll() -> List[User]
     public List<User> find(){
 
@@ -75,8 +78,13 @@ public class UserService {
 
     public boolean delete(String id){
         User theUser=this.theUserRepository.findById(id).orElse(null);
-        if(theUser != null) {
 
+        if (theUser == null){
+            return false;
+        }
+
+        // Debemos validar primero que no exista una relacion con un Doctor o Un Patient
+        if (!this.clasificatorService.existRelation(theUser.getId())) {
             // 1. Eliminamos el perfil asociado al usuario
             Profile userProfile = this.theProfileRepository.findProfileByUserID(theUser.getId());
             if (userProfile != null) {

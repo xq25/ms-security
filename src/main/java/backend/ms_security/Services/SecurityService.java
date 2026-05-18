@@ -41,6 +41,11 @@ public class SecurityService {
     @Autowired
     private ValidatorsService theValidatorService;
 
+//    @Autowired
+//    private UserRoleService theUserRoleService;
+//
+//    @Autowired RoleService theRoleService;
+
     @Value("${rest.expiration}")
     private Long RESET_TOKEN_EXPIRATION;
 
@@ -54,9 +59,13 @@ public class SecurityService {
             theActualUser = this.theUserService.create(newUser);
             // Generamos un perfil vacio (por defecto)
             Profile newProfile = this.theProfileService.create(new Profile());
-
             this.theUserService.addProfile(theActualUser.getId(), newProfile.getId());
 
+//            //Le agregamos el rol por defecto que queramos a este usuario
+//            Role defualtRole = this.theRoleService.findById(defaulRoleId);
+//            if (defualtRole != null){
+//                this.theUserRoleService.addUserRole(theActualUser.getId(), defaulRoleId);
+//            }
 
             String token    = theJwtService.generateToken(theActualUser);
             Date expiryDate = theJwtService.getExpirationFromToken(token);
