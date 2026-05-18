@@ -184,4 +184,9 @@ public class SecurityController {
         return this.theSecurityService.permissionsValidation(request, permissionData);
     }
 
+    @GetMapping("{user_id}/exist")
+    public boolean existUser(@PathVariable String user_id){
+        return this.theSecurityService.existUserById(user_id);
+    }
+
 }
