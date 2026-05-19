@@ -1,9 +1,11 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Profile;
-import backend.ms_security.Services.PhotoService;
 import backend.ms_security.Services.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,32 +19,44 @@ public class ProfileController {
     private ProfileService theProfileService;
 
     @GetMapping("")
-    public List<Profile> find() {
-        return this.theProfileService.find();
+    public ResponseEntity<ApiResponse<List<Profile>>> find() {
+        return ResponseEntity.ok(this.theProfileService.find());
     }
 
     @GetMapping("{id}")
-    public Profile findById(@PathVariable String id) {
-        return this.theProfileService.findById(id);
+    public ResponseEntity<ApiResponse<Profile>> findById(@PathVariable String id) {
+        ApiResponse<Profile> response = this.theProfileService.findById(id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @GetMapping("user/{user_id}")
-    public Profile findByUserID(@PathVariable String user_id){ return this.theProfileService.findProfileByUser(user_id); }
+    public ResponseEntity<ApiResponse<Profile>> findByUserID(@PathVariable String user_id) {
+        ApiResponse<Profile> response = this.theProfileService.findProfileByUser(user_id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 
     @PostMapping
-    public Profile create(@RequestBody Profile newProfile) {
-        return this.theProfileService.create(newProfile);
+    public ResponseEntity<ApiResponse<Profile>> create(@RequestBody Profile newProfile) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.theProfileService.create(newProfile));
     }
 
     @PutMapping("{id}")
-    public Profile update(@PathVariable String id, @RequestBody Profile newProfile) {
-        return this.theProfileService.update(id, newProfile);
+    public ResponseEntity<ApiResponse<Profile>> update(@PathVariable String id, @RequestBody Profile newProfile) {
+        ApiResponse<Profile> response = this.theProfileService.update(id, newProfile);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable String id) {
-        this.theProfileService.delete(id);
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
+        ApiResponse<Void> response = this.theProfileService.delete(id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
-
 }
-

@@ -1,5 +1,6 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.UserRole;
 import backend.ms_security.Services.UserRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -19,40 +19,35 @@ public class UserRoleController {
     private UserRoleService theUserRoleService;
 
     @GetMapping("user/{user_id}")
-    public List<UserRole> getRolesByUser(@PathVariable String user_id){
-        return this.theUserRoleService.getRolesByUser(user_id);
-
+    public ResponseEntity<ApiResponse<List<UserRole>>> getRolesByUser(@PathVariable String user_id) {
+        ApiResponse<List<UserRole>> response = this.theUserRoleService.getRolesByUser(user_id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @GetMapping("role/{role_id}")
-    public List<UserRole> getUsersByRole(@PathVariable String role_id){
-        return this.theUserRoleService.getUsersByRole(role_id);
+    public ResponseEntity<ApiResponse<List<UserRole>>> getUsersByRole(@PathVariable String role_id) {
+        ApiResponse<List<UserRole>> response = this.theUserRoleService.getUsersByRole(role_id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @PostMapping("user/{userId}/role/{roleId}")
-    public ResponseEntity<Map<String, String>> addUserRole(@PathVariable String userId, @PathVariable String roleId) {
-
-        boolean response = this.theUserRoleService.addUserRole(userId, roleId);
-        if (response) {
-            return ResponseEntity.ok(Map.of("user-role", "Success"));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "User or Role not found"));
-        }
+    public ResponseEntity<ApiResponse<Void>> addUserRole(
+            @PathVariable String userId, @PathVariable String roleId) {
+        ApiResponse<Void> response = this.theUserRoleService.addUserRole(userId, roleId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @DeleteMapping("{userRoleId}")
-    public ResponseEntity<Map<String, String>> removeUserRole(@PathVariable String userRoleId) {
-
-        boolean response = this.theUserRoleService.removeUserRole(userRoleId);
-        if (response) {
-            return ResponseEntity.ok(Map.of("message", "Success"));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "User or Role not found"));
-        }
+    public ResponseEntity<ApiResponse<Void>> removeUserRole(@PathVariable String userRoleId) {
+        ApiResponse<Void> response = this.theUserRoleService.removeUserRole(userRoleId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 }
-

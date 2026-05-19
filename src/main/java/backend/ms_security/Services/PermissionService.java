@@ -1,11 +1,10 @@
 package backend.ms_security.Services;
 
+import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Permission;
 import backend.ms_security.Models.RolePermission;
 import backend.ms_security.Repositories.PermissionRepository;
-
 import backend.ms_security.Repositories.RolePermissionRepository;
-import backend.ms_security.Repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,62 +15,41 @@ public class PermissionService {
 
     @Autowired
     private PermissionRepository thePermissionRepository;
-
     @Autowired
     private RolePermissionRepository theRolePermissionRepository;
-    // getAll() -> List<Permission>
-    public List<Permission> find() {
-        return this.thePermissionRepository.findAll();
+
+    public ApiResponse<List<Permission>> find() {
+        return ApiResponse.success(this.thePermissionRepository.findAll(), "Permisos obtenidos correctamente");
     }
 
-    // getById() -> Permission
-    public Permission findById(String id) {
-        return this.thePermissionRepository.findById(id).orElse(null);
+    public ApiResponse<Permission> findById(String id) {
+        Permission p = this.thePermissionRepository.findById(id).orElse(null);
+        if (p == null) return ApiResponse.error("Permiso no encontrado");
+        return ApiResponse.success(p, "Permiso encontrado");
     }
 
-    // create() -> Permission
-    public Permission create(Permission newPermission) {
-        Permission samePermission = this.thePermissionRepository.getPermission(newPermission.getUrl(), newPermission.getMethodValue());
-
-        if (samePermission != null){
-            return null;
-        }
-        return this.thePermissionRepository.save(newPermission);
+    public ApiResponse<Permission> create(Permission newPermission) {
+        Permission existing = this.thePermissionRepository.getPermission(newPermission.getUrl(), newPermission.getMethodValue());
+        if (existing != null) return ApiResponse.error("El permiso con esas características ya existe");
+        return ApiResponse.success(this.thePermissionRepository.save(newPermission), "Permiso creado correctamente");
     }
 
-    // update() -> Permission
-    public Permission update(String id, Permission newPermission) {
-        Permission actualPermission =
-                this.thePermissionRepository.findById(id).orElse(null);
-
-        if (actualPermission != null) {
-            actualPermission.setUrl(newPermission.getUrl());
-            actualPermission.setMethod(newPermission.getMethod());
-            actualPermission.setModel(newPermission.getModel());
-
-            this.thePermissionRepository.save(actualPermission);
-            return actualPermission;
-        } else {
-            return null;
-        }
+    public ApiResponse<Permission> update(String id, Permission newPermission) {
+        Permission actual = this.thePermissionRepository.findById(id).orElse(null);
+        if (actual == null) return ApiResponse.error("Permiso no encontrado");
+        actual.setUrl(newPermission.getUrl());
+        actual.setMethod(newPermission.getMethod());
+        actual.setModel(newPermission.getModel());
+        this.thePermissionRepository.save(actual);
+        return ApiResponse.success(actual, "Permiso actualizado correctamente");
     }
 
-    public boolean delete(String id) {
+    public ApiResponse<Void> delete(String id) {
         Permission thePermission = this.thePermissionRepository.findById(id).orElse(null);
-
-        if (thePermission != null) {
-
-            List<RolePermission> roles = this.theRolePermissionRepository.getRolesByPermission(thePermission.getId());
-
-            if (roles != null && !roles.isEmpty()){
-                this.theRolePermissionRepository.deleteAll(roles);
-            }
-            this.thePermissionRepository.delete(thePermission);
-            return true;
-        }
-        else{
-            return false;
-        }
+        if (thePermission == null) return ApiResponse.error("Permiso no encontrado");
+        List<RolePermission> roles = this.theRolePermissionRepository.getRolesByPermission(thePermission.getId());
+        if (roles != null && !roles.isEmpty()) this.theRolePermissionRepository.deleteAll(roles);
+        this.thePermissionRepository.delete(thePermission);
+        return ApiResponse.success("Permiso eliminado correctamente");
     }
-
 }
