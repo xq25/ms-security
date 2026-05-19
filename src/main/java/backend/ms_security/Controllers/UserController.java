@@ -1,5 +1,6 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.User;
 import backend.ms_security.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,100 +9,94 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
-@CrossOrigin // Evita el problema de host al ejecutar
+@CrossOrigin
 @RestController
-@RequestMapping("/api/users") // Definimos aqui la ruta del servidor para que se activen ciertos endpoints.
-// Clase de invocaciones
+@RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired // Auto Instanciacion de service
+    @Autowired
     private UserService theUserService;
 
-    @GetMapping("") // Solo accede a la ruta (/users/ )
-    public List<User> find() {
-        return this.theUserService.find();
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<List<User>>> find() {
+        return ResponseEntity.ok(this.theUserService.find());
     }
 
-    @GetMapping("{id}") // Solo accede a la ruta (/users/:id)
-    public User findById(@PathVariable String id) { // Sacamos la variables dentro de la ruta (id)
-        return this.theUserService.findById(id);
+    @GetMapping("{id}")
+    public ResponseEntity<ApiResponse<User>> findById(@PathVariable String id) {
+        ApiResponse<User> response = this.theUserService.findById(id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @GetMapping("email/{email}")
-    public User findByEmail(@PathVariable String email){return  this.theUserService.findByEmail(email); }
-
-    @PostMapping // Asociado directamente a los metodos de creacion(No asignamos un metodo especifico)
-    public User create(@RequestBody User newUser) { // Pedimos extraer el body para almaacenarlo como una variable
-        return this.theUserService.create(newUser);
+    public ResponseEntity<ApiResponse<User>> findByEmail(@PathVariable String email) {
+        ApiResponse<User> response = this.theUserService.findByEmail(email);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    @PutMapping("{id}") // Solicitamos laa variable dentro de la ruta y tambien extraemos la informacion del body.
-    public User update(@PathVariable String id, @RequestBody User newUser) {
-        return this.theUserService.update(id, newUser);
+    @PostMapping
+    public ResponseEntity<ApiResponse<User>> create(@RequestBody User newUser) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.theUserService.create(newUser));
     }
 
-    @DeleteMapping("{id}") // Solo solicitamos la variable en la ruta.
-    public void delete(@PathVariable String id) {
-        this.theUserService.delete(id);
+    @PutMapping("{id}")
+    public ResponseEntity<ApiResponse<User>> update(@PathVariable String id, @RequestBody User newUser) {
+        ApiResponse<User> response = this.theUserService.update(id, newUser);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
+        ApiResponse<Void> response = this.theUserService.delete(id);
+        if (!response.isSuccess()) {
+            HttpStatus status = response.getMessage().contains("Doctor o Paciente")
+                    ? HttpStatus.CONFLICT
+                    : HttpStatus.NOT_FOUND;
+            return ResponseEntity.status(status).body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("{user_id}/profile/{profile_id}")
-    public ResponseEntity<Map<String, String>> addUserProfile(
-            @PathVariable String user_id,
-            @PathVariable String profile_id) {
-
-        boolean response = this.theUserService.addProfile(user_id, profile_id);
-        if (response) {
-            return ResponseEntity.ok(Map.of("message", "Success"));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "User or Profile not found"));
-        }
+    public ResponseEntity<ApiResponse<Void>> addUserProfile(
+            @PathVariable String user_id, @PathVariable String profile_id) {
+        ApiResponse<Void> response = this.theUserService.addProfile(user_id, profile_id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
     @DeleteMapping("{user_id}/profile/{profile_id}")
-    public ResponseEntity<Map<String, String>> deleteUserProfile(
-            @PathVariable String user_id,
-            @PathVariable String profile_id) {
-
-        boolean response = this.theUserService.removeProfile(user_id, profile_id);
-        if (response) {
-            return ResponseEntity.ok(Map.of("message", "Success"));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "User or Profile not found"));
-        }
+    public ResponseEntity<ApiResponse<Void>> deleteUserProfile(
+            @PathVariable String user_id, @PathVariable String profile_id) {
+        ApiResponse<Void> response = this.theUserService.removeProfile(user_id, profile_id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
     @PostMapping("{userId}/session/{sessionId}")
-    public ResponseEntity<Map<String, String>> addUserSession(
-            @PathVariable String userId,
-            @PathVariable String sessionId) {
-
-        boolean response = this.theUserService.addSession(userId, sessionId);
-        if (response) {
-            return ResponseEntity.ok(Map.of("message", "Success"));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "User or Session not found"));
-        }
+    public ResponseEntity<ApiResponse<Void>> addUserSession(
+            @PathVariable String userId, @PathVariable String sessionId) {
+        ApiResponse<Void> response = this.theUserService.addSession(userId, sessionId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
     @DeleteMapping("{userId}/session/{sessionId}")
-    public ResponseEntity<Map<String, String>> deleteUserSession(
-            @PathVariable String userId,
-            @PathVariable String sessionId) {
-
-        boolean response = this.theUserService.removeSession(userId, sessionId);
-        if (response) {
-            return ResponseEntity.ok(Map.of("message", "Success"));
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "User or Session not found"));
-        }
+    public ResponseEntity<ApiResponse<Void>> deleteUserSession(
+            @PathVariable String userId, @PathVariable String sessionId) {
+        ApiResponse<Void> response = this.theUserService.removeSession(userId, sessionId);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
-
 }

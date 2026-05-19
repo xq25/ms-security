@@ -1,8 +1,11 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Session;
 import backend.ms_security.Services.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,28 +19,36 @@ public class SessionController {
     private SessionService theSessionService;
 
     @GetMapping("")
-    public List<Session> find() {
-        return this.theSessionService.find();
+    public ResponseEntity<ApiResponse<List<Session>>> find() {
+        return ResponseEntity.ok(this.theSessionService.find());
     }
 
     @GetMapping("{id}")
-    public Session findById(@PathVariable String id) {
-        return this.theSessionService.findById(id);
+    public ResponseEntity<ApiResponse<Session>> findById(@PathVariable String id) {
+        ApiResponse<Session> response = this.theSessionService.findById(id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @PostMapping
-    public Session create(@RequestBody Session newSession) {
-        return this.theSessionService.create(newSession);
+    public ResponseEntity<ApiResponse<Session>> create(@RequestBody Session newSession) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.theSessionService.create(newSession));
     }
 
     @PutMapping("{id}")
-    public Session update(@PathVariable String id, @RequestBody Session newSession) {
-        return this.theSessionService.update(id, newSession);
+    public ResponseEntity<ApiResponse<Session>> update(@PathVariable String id, @RequestBody Session newSession) {
+        ApiResponse<Session> response = this.theSessionService.update(id, newSession);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @DeleteMapping("{id}")
-    public void delete(@PathVariable String id) {
-        this.theSessionService.delete(id);
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
+        ApiResponse<Void> response = this.theSessionService.delete(id);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
-
 }

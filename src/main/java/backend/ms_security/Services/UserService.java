@@ -1,5 +1,6 @@
 package backend.ms_security.Services;
 
+import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Profile;
 import backend.ms_security.Models.Session;
 import backend.ms_security.Models.User;
@@ -7,170 +8,110 @@ import backend.ms_security.Models.UserRole;
 import backend.ms_security.Repositories.ProfileRepository;
 import backend.ms_security.Repositories.SessionRepository;
 import backend.ms_security.Repositories.UserRepository;
-
 import backend.ms_security.Repositories.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service // Indica el espacio de la logica de negocio.(Obligatorio, esto permite instanciar de forma automatica donde la useamos para no tener que usar new UserService)
+@Service
 public class UserService {
 
-    //Inyeccion de Repositorios.
-    @Autowired // Instancia automaticamente un objeto de UserRepository
-    private UserRepository theUserRepository; // Aqui almacenamos nuestro UserRepository para realizar las consultas. (Inyeccion de dependencias)
-
+    @Autowired
+    private UserRepository theUserRepository;
     @Autowired
     private ProfileRepository theProfileRepository;
-
     @Autowired
     private SessionRepository theSessionRepository;
-
     @Autowired
     private UserRoleRepository theUserRoleRepository;
-
-    @Autowired // Inyectamos el servicio de encryptado para a la hora de generar o actualizar un usuario poder encryptar la contraseña.
+    @Autowired
     private EncryptionService theEncryption;
-
     @Autowired
     private ClasificatorService clasificatorService;
 
-    //getAll() -> List[User]
-    public List<User> find(){
-
-        return this.theUserRepository.findAll();
+    public ApiResponse<List<User>> find() {
+        return ApiResponse.success(this.theUserRepository.findAll(), "Usuarios obtenidos correctamente");
     }
 
-    // getById() -> User
-    public User findById(String id){
-        User theUser=this.theUserRepository.findById(id).orElse(null);
-        return theUser;
+    public ApiResponse<User> findById(String id) {
+        User theUser = this.theUserRepository.findById(id).orElse(null);
+        if (theUser == null) return ApiResponse.error("Usuario no encontrado");
+        return ApiResponse.success(theUser, "Usuario encontrado");
     }
 
-    public User findByEmail(String email){
+    public ApiResponse<User> findByEmail(String email) {
         User theUser = this.theUserRepository.getUserByEmail(email);
-        return theUser;
+        if (theUser == null) return ApiResponse.error("Usuario no encontrado");
+        return ApiResponse.success(theUser, "Usuario encontrado");
     }
 
-    // create() -> User -> User.id != null
-    public User create(User newUser){
-        // Antes de crear un usuario, validar que no exista antes.
-        //User knewUser = this.theUserRepository
-
+    public ApiResponse<User> create(User newUser) {
         newUser.setPassword(this.theEncryption.convertSHA256(newUser.getPassword()));
-        return this.theUserRepository.save(newUser);
+        return ApiResponse.success(this.theUserRepository.save(newUser), "Usuario creado correctamente");
     }
 
-    public User update(String id, User newUser){
-        User actualUser=this.theUserRepository.findById(id).orElse(null);
-
-        if(actualUser!=null){
-            actualUser.setName(newUser.getName());
-            actualUser.setEmail(newUser.getEmail());
-            actualUser.setPassword(this.theEncryption.convertSHA256(newUser.getPassword()));
-            this.theUserRepository.save(actualUser);
-            return actualUser;
-        }else{
-            return null;
-        }
+    public ApiResponse<User> update(String id, User newUser) {
+        User actualUser = this.theUserRepository.findById(id).orElse(null);
+        if (actualUser == null) return ApiResponse.error("Usuario no encontrado");
+        actualUser.setName(newUser.getName());
+        actualUser.setEmail(newUser.getEmail());
+        actualUser.setPassword(this.theEncryption.convertSHA256(newUser.getPassword()));
+        this.theUserRepository.save(actualUser);
+        return ApiResponse.success(actualUser, "Usuario actualizado correctamente");
     }
 
-    public boolean delete(String id){
-        User theUser=this.theUserRepository.findById(id).orElse(null);
-
-        if (theUser == null){
-            return false;
+    public ApiResponse<Void> delete(String id) {
+        User theUser = this.theUserRepository.findById(id).orElse(null);
+        if (theUser == null) return ApiResponse.error("Usuario no encontrado");
+        if (this.clasificatorService.existRelation(theUser.getId())) {
+            return ApiResponse.error("No se puede eliminar el usuario porque tiene un Doctor o Paciente asociado en el sistema");
         }
-
-        // Debemos validar primero que no exista una relacion con un Doctor o Un Patient
-        if (!this.clasificatorService.existRelation(theUser.getId())) {
-            // 1. Eliminamos el perfil asociado al usuario
-            Profile userProfile = this.theProfileRepository.findProfileByUserID(theUser.getId());
-            if (userProfile != null) {
-                this.theProfileRepository.delete(userProfile);
-            }
-
-            // 2. Eliminamos todos los roles asociados al usuario
-            List<UserRole> roles = this.theUserRoleRepository.getRolesByUser(id);
-            if (roles != null && !roles.isEmpty()) {
-                this.theUserRoleRepository.deleteAll(roles); // ← deleteAll recibe una lista directamente
-            }
-            // 3. Eliminamos las sesiones asociadas al usuario
-
-            this.theUserRepository.delete(theUser);
-            return true;
-        }
-        else{
-            return false;
-        }
+        Profile userProfile = this.theProfileRepository.findProfileByUserID(theUser.getId());
+        if (userProfile != null) this.theProfileRepository.delete(userProfile);
+        List<UserRole> roles = this.theUserRoleRepository.getRolesByUser(id);
+        if (roles != null && !roles.isEmpty()) this.theUserRoleRepository.deleteAll(roles);
+        this.theUserRepository.delete(theUser);
+        return ApiResponse.success("Usuario eliminado correctamente");
     }
 
-    public boolean existUserById(String user_id){
-        User theUser=this.theUserRepository.findById(user_id).orElse(null);
-        return theUser != null;
+    public boolean existUserById(String user_id) {
+        return this.theUserRepository.findById(user_id).orElse(null) != null;
     }
 
-// ---- Enlace con los Perfiles ----
-    /*Permite Asociar un usuario a un perfil, pero se debe generar previamente el perfil en nuestra base de datos.*/
-    public boolean addProfile(String user_id, String profile_id){
+    public ApiResponse<Void> addProfile(String user_id, String profile_id) {
         User user = this.theUserRepository.findById(user_id).orElse(null);
         Profile profile = this.theProfileRepository.findById(profile_id).orElse(null);
-
-        if(user != null && profile != null){
-            profile.setUser(user);
-            this.theProfileRepository.save(profile);
-            return true;
-        }else{
-            return false;
-        }
-
+        if (user == null || profile == null) return ApiResponse.error("Usuario o perfil no encontrado");
+        profile.setUser(user);
+        this.theProfileRepository.save(profile);
+        return ApiResponse.success("Perfil asociado correctamente");
     }
 
-    public boolean removeProfile(String user_id, String profile_id){
+    public ApiResponse<Void> removeProfile(String user_id, String profile_id) {
         User user = this.theUserRepository.findById(user_id).orElse(null);
         Profile profile = this.theProfileRepository.findById(profile_id).orElse(null);
-
-        if(user != null && profile != null){
-            profile.setUser(null);
-            this.theProfileRepository.save(profile);
-            return true;
-        }else{
-            return false;
-        }
+        if (user == null || profile == null) return ApiResponse.error("Usuario o perfil no encontrado");
+        profile.setUser(null);
+        this.theProfileRepository.save(profile);
+        return ApiResponse.success("Perfil desvinculado correctamente");
     }
 
-//---- Enlace con las Sessiones -----
-    /**
-     * Permite asociar un usuario y una sesión. Para que funcione ambos
-     * ya deben de existir en la base de datos.
-     * @param user_id
-     * @param session_id
-     * @return
-     */
-    public boolean addSession(String user_id,String session_id){
-        User theUser=this.theUserRepository.findById(user_id).orElse(null);
-        Session theSession=this.theSessionRepository.findById(session_id).orElse(null);
-        if(theUser!=null && theSession!=null){
-            theSession.setUser(theUser);
-            this.theSessionRepository.save(theSession);
-            return true;
-        }else{
-            return false;
-        }
+    public ApiResponse<Void> addSession(String user_id, String session_id) {
+        User theUser = this.theUserRepository.findById(user_id).orElse(null);
+        Session theSession = this.theSessionRepository.findById(session_id).orElse(null);
+        if (theUser == null || theSession == null) return ApiResponse.error("Usuario o sesión no encontrado");
+        theSession.setUser(theUser);
+        this.theSessionRepository.save(theSession);
+        return ApiResponse.success("Sesión asociada correctamente");
     }
 
-    /*Des enlazamos la relacion entre un usuario y una session especifica*/
-    public boolean removeSession(String user_id,String session_id){
-        User theUser=this.theUserRepository.findById(user_id).orElse(null);
-        Session theSession=this.theSessionRepository.findById(session_id).orElse(null);
-        if(theUser!=null && theSession!=null){
-            theSession.setUser(null);
-            this.theSessionRepository.save(theSession);
-            return true;
-        }else{
-            return false;
-        }
+    public ApiResponse<Void> removeSession(String user_id, String session_id) {
+        User theUser = this.theUserRepository.findById(user_id).orElse(null);
+        Session theSession = this.theSessionRepository.findById(session_id).orElse(null);
+        if (theUser == null || theSession == null) return ApiResponse.error("Usuario o sesión no encontrado");
+        theSession.setUser(null);
+        this.theSessionRepository.save(theSession);
+        return ApiResponse.success("Sesión desvinculada correctamente");
     }
-
 }
