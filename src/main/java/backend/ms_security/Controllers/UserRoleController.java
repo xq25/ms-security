@@ -35,9 +35,8 @@ public class UserRoleController {
     }
 
     @PostMapping("user/{userId}/role/{roleId}")
-    public ResponseEntity<ApiResponse<Void>> addUserRole(
-            @PathVariable String userId, @PathVariable String roleId) {
-        ApiResponse<Void> response = this.theUserRoleService.addUserRole(userId, roleId);
+    public ResponseEntity<ApiResponse<UserRole>> addUserRole(@PathVariable String userId, @PathVariable String roleId) {
+        ApiResponse<UserRole> response = this.theUserRoleService.addUserRole(userId, roleId);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);

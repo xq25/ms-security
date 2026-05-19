@@ -7,6 +7,7 @@ import backend.ms_security.Models.UserRole;
 import backend.ms_security.Repositories.RoleRepository;
 import backend.ms_security.Repositories.UserRepository;
 import backend.ms_security.Repositories.UserRoleRepository;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,12 +35,26 @@ public class UserRoleService {
         return ApiResponse.success(this.theUserRoleRepository.getUsersByRole(role_id), "Usuarios del rol obtenidos correctamente");
     }
 
-    public ApiResponse<Void> addUserRole(String userId, String roleId) {
+    public ApiResponse<UserRole> addUserRole(String userId, String roleId) {
         User user = this.theUserRepository.findById(userId).orElse(null);
+        if(user == null){
+            return ApiResponse.error("Usuario no encontrado con ID: " + userId);
+        }
+
         Role role = this.theRoleRepository.findById(roleId).orElse(null);
-        if (user == null || role == null) return ApiResponse.error("Usuario o rol no encontrado");
-        this.theUserRoleRepository.save(new UserRole(user, role));
-        return ApiResponse.success("Rol asignado al usuario correctamente");
+        if(role == null){
+            return ApiResponse.error("Rol no encontrado con ID: " + roleId);
+        }
+
+        UserRole sameUserRole = this.theUserRoleRepository.getByUserIdAndRoleId(userId, roleId);
+        if(sameUserRole != null){
+            return ApiResponse.error("El usuario ya tiene asignado este rol");
+        }
+
+        UserRole newUserRole = this.theUserRoleRepository.save(new UserRole(user, role));
+        return ApiResponse.success(newUserRole,"Rol asignado al usuario correctamente");
+
+
     }
 
     public ApiResponse<Void> removeUserRole(String userRoleId) {

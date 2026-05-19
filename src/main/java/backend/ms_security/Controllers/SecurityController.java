@@ -2,16 +2,13 @@ package backend.ms_security.Controllers;
 
 import java.util.HashMap;
 
-import backend.ms_security.Models.ApiResponse;
-import backend.ms_security.Models.Permission;
+import backend.ms_security.Models.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import backend.ms_security.Models.Session;
-import backend.ms_security.Models.User;
 import backend.ms_security.Services.SecurityService;
 
 @RestController
@@ -23,19 +20,31 @@ public class SecurityController {
     private SecurityService theSecurityService;
 
     // REGISTER MANUAL
+//    @PostMapping("register")
+//    public ResponseEntity<ApiResponse<Session>> register(@RequestBody User newUser) {
+//
+//        Session session = this.theSecurityService.register(newUser);
+//
+//        if (session != null) {
+//            return ResponseEntity.ok(
+//                    ApiResponse.success(session, "Usuario registrado correctamente")
+//            );
+//        }
+//
+//        return ResponseEntity.status(HttpStatus.CONFLICT)
+//                .body(ApiResponse.error("El correo ya está registrado"));
+//    }
+
+    // REGISTER CON ASIGNACION DE ROLE POR DEFECTO
     @PostMapping("register")
-    public ResponseEntity<ApiResponse<Session>> register(@RequestBody User newUser) {
-
-        Session session = this.theSecurityService.register(newUser);
-
-        if (session != null) {
-            return ResponseEntity.ok(
-                    ApiResponse.success(session, "Usuario registrado correctamente")
-            );
+    public ResponseEntity<ApiResponse<Session>> registerWithDefaultRole(@RequestBody RegisterRequest registerRequest) {
+        ApiResponse<Session> response = this.theSecurityService.register(registerRequest.getUser(), registerRequest.getDefaultRoleId() );
+        if (response.isSuccess()){
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
         }
 
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error("El correo ya está registrado"));
     }
 
     // LOGOUT
@@ -223,6 +232,14 @@ public class SecurityController {
         return ResponseEntity.ok(
                 ApiResponse.success(exists, "Validación completada")
         );
+    }
+
+    @GetMapping("user/email/{email}")
+    public ResponseEntity<ApiResponse<User>> findByEmail(@PathVariable String email) {
+        ApiResponse<User> response = this.theSecurityService.findUserByEmail(email);
+        return response.isSuccess()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
 }

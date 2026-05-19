@@ -41,33 +41,81 @@ public class SecurityService {
     @Autowired
     private ValidatorsService theValidatorService;
 
+    @Autowired
+    private UserRoleService theUserRoleService;
+
+    @Autowired
+    private RoleService theRoleService;
+
     @Value("${rest.expiration}")
     private Long RESET_TOKEN_EXPIRATION;
 
-    // Manual Register
-    public Session register(User newUser) {
+//    // Manual Register
+//    public Session register(User newUser) {
+//        User theActualUser = this.theUserService.findByEmail(newUser.getEmail()).getData();
+//
+//        if (theActualUser == null) {
+//            theActualUser = this.theUserService.create(newUser).getData();
+//
+//            Profile newProfile = this.theProfileService.create(new Profile()).getData();
+//            this.theUserService.addProfile(theActualUser.getId(), newProfile.getId());
+//
+//            String token    = theJwtService.generateToken(theActualUser);
+//            Date expiryDate = theJwtService.getExpirationFromToken(token);
+//
+//            Session emptySession = theSessionService.create(new Session(token, expiryDate)).getData();
+//            theUserService.addSession(theActualUser.getId(), emptySession.getId());
+//
+//            String body = "Hola " + newUser.getName() + ",\n\n"
+//                    + "Gracias por registrarte en nuestra plataforma.\n"
+//                    + "El equipo de MS Security";
+//            theNotificationService.sendEmail(newUser.getEmail(), body);
+//
+//            return theSessionService.findById(emptySession.getId()).getData();
+//        }
+//        return null;
+//    }
+
+    // Register With DefaultRole
+    public ApiResponse<Session> register(User newUser, String defaultRoleId) {
         User theActualUser = this.theUserService.findByEmail(newUser.getEmail()).getData();
 
+        // Validamos que el rol por defecto sea válido
+        Role role = this.theRoleService.findById(defaultRoleId).getData();
+        if (role == null) {
+            return ApiResponse.error("No se encontró el rol por defecto con ID: " + defaultRoleId);
+        }
+
+        // Usuario no existente en el sistema
         if (theActualUser == null) {
             theActualUser = this.theUserService.create(newUser).getData();
 
+            // Creamos y asignamos un perfil por defecto al usuario
             Profile newProfile = this.theProfileService.create(new Profile()).getData();
             this.theUserService.addProfile(theActualUser.getId(), newProfile.getId());
-
-            String token    = theJwtService.generateToken(theActualUser);
-            Date expiryDate = theJwtService.getExpirationFromToken(token);
-
-            Session emptySession = theSessionService.create(new Session(token, expiryDate)).getData();
-            theUserService.addSession(theActualUser.getId(), emptySession.getId());
 
             String body = "Hola " + newUser.getName() + ",\n\n"
                     + "Gracias por registrarte en nuestra plataforma.\n"
                     + "El equipo de MS Security";
             theNotificationService.sendEmail(newUser.getEmail(), body);
-
-            return theSessionService.findById(emptySession.getId()).getData();
         }
-        return null;
+
+        String token    = theJwtService.generateToken(theActualUser);
+        Date expiryDate = theJwtService.getExpirationFromToken(token);
+
+        Session emptySession = theSessionService.create(new Session(token, expiryDate)).getData();
+        theUserService.addSession(theActualUser.getId(), emptySession.getId());
+        Session theActualSession = theSessionService.findById(emptySession.getId()).getData();
+
+        //Asignamos el rol por defecto con el que se esta haciendo el registro
+        ApiResponse<UserRole> responseUserRole = this.theUserRoleService.addUserRole(theActualUser.getId(), defaultRoleId);
+
+        // Si algo en el proceso falla -> Unicamente podria fallar que este usuario ya posea ese role. Devolvemos la session sin la asignacion del role
+        if (!responseUserRole.isSuccess()){
+            return ApiResponse.success(theActualSession, "Usuario registrado correctamente pero no se pudo asignar el rol por defecto: " + responseUserRole.getMessage());
+        }
+
+        return ApiResponse.success(theActualSession, "Usuario registrado correctamente con role por defecto");
     }
 
     // LOGOUT
@@ -217,5 +265,9 @@ public class SecurityService {
 
     public boolean existUserById(String user_id) {
         return this.theUserService.existUserById(user_id);
+    }
+
+    public ApiResponse<User> findUserByEmail(String email){
+        return this.theUserService.findByEmail(email);
     }
 }
