@@ -30,12 +30,12 @@ public class RolePermissionService {
         return ApiResponse.success(this.theRolePermissionRepository.getRolesByPermission(permission_id), "Roles del permiso obtenidos correctamente");
     }
 
-    public ApiResponse<Void> addRolePermission(String role_id, String permission_id) {
+    public ApiResponse<RolePermission> addRolePermission(String role_id, String permission_id) {
         Role role = this.theRoleRepository.findById(role_id).orElse(null);
         Permission permission = this.thePermissionRepository.findById(permission_id).orElse(null);
         if (role == null || permission == null) return ApiResponse.error("Rol o permiso no encontrado");
-        this.theRolePermissionRepository.save(new RolePermission(role, permission));
-        return ApiResponse.success("Permiso asignado al rol correctamente");
+        RolePermission newRolePermission = this.theRolePermissionRepository.save(new RolePermission(role, permission));
+        return ApiResponse.success(newRolePermission,"Permiso asignado al rol correctamente");
     }
 
     public ApiResponse<Void> removeRolePermission(String role_permission_id) {

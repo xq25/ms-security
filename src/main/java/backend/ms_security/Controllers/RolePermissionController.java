@@ -29,9 +29,9 @@ public class RolePermissionController {
     }
 
     @PostMapping("role/{role_id}/permission/{permission_id}")
-    public ResponseEntity<ApiResponse<Void>> addRolePermission(
+    public ResponseEntity<ApiResponse<RolePermission>> addRolePermission(
             @PathVariable String role_id, @PathVariable String permission_id) {
-        ApiResponse<Void> response = this.theService.addRolePermission(role_id, permission_id);
+        ApiResponse<RolePermission> response = this.theService.addRolePermission(role_id, permission_id);
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);

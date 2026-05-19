@@ -208,7 +208,7 @@ public class SecurityController {
 
     // PERMISSIONS VALIDATION
     @PostMapping("permissions-validation")
-    public ResponseEntity<ApiResponse<Boolean>> permissionsValidation(
+    public ResponseEntity<Boolean> permissionsValidation(
             final HttpServletRequest request,
             @RequestBody Permission permissionData) {
 
@@ -218,7 +218,7 @@ public class SecurityController {
         );
 
         return ResponseEntity.ok(
-                ApiResponse.success(hasPermission, "Validación completada")
+                hasPermission
         );
     }
 
