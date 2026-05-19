@@ -1,24 +1,18 @@
 package backend.ms_security.Controllers;
 
-import java.io.IOException;
 import java.util.HashMap;
 
+import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Permission;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import backend.ms_security.Models.Session;
 import backend.ms_security.Models.User;
 import backend.ms_security.Services.SecurityService;
-import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @CrossOrigin
@@ -30,163 +24,205 @@ public class SecurityController {
 
     // REGISTER MANUAL
     @PostMapping("register")
-    public HashMap<String, Object> register(@RequestBody User newUser, final HttpServletResponse response) throws IOException {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Session>> register(@RequestBody User newUser) {
+
         Session session = this.theSecurityService.register(newUser);
 
         if (session != null) {
-
-            theResponse.put("session", session);
-        } else {
-            // 409 Conflict — el correo ya está registrado
-            response.sendError(HttpServletResponse.SC_CONFLICT);
+            return ResponseEntity.ok(
+                    ApiResponse.success(session, "Usuario registrado correctamente")
+            );
         }
-        return theResponse;
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("El correo ya está registrado"));
     }
 
+    // LOGOUT
     @PutMapping("logout")
-    public HashMap<String, Object> logout(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody HashMap<String, String> body) {
+
         boolean success = this.theSecurityService.logout(body.get("id"));
 
         if (success) {
-            theResponse.put("message", "Sesión cerrada correctamente");
-        } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return ResponseEntity.ok(
+                    ApiResponse.success("Sesión cerrada correctamente")
+            );
         }
-        return theResponse;
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("No se encontró la sesión"));
     }
 
-    // LOGIN MANUAL (con captcha)
+    // LOGIN MANUAL
     @PostMapping("login")
-    public HashMap<String, Object> login(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Session>> login(@RequestBody HashMap<String, String> body) {
 
-        // Extraemos los campos del body
-        String email        = body.get("email");
-        String password     = body.get("password");
-        String captchaToken = body.get("captchaToken"); // 👈 nuevo campo
+        String email = body.get("email");
+        String password = body.get("password");
+        String captchaToken = body.get("captchaToken");
 
         User theNewUser = new User(email, password);
+
         Session session = this.theSecurityService.login(theNewUser, captchaToken);
 
         if (session != null) {
-            theResponse.put("session",session);
-        } else {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return ResponseEntity.ok(
+                    ApiResponse.success(session, "Inicio de sesión exitoso")
+            );
         }
-        return theResponse;
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Credenciales inválidas"));
     }
 
-    // LOGIN CON GOOGLE
+    // LOGIN GOOGLE
     @PostMapping("login/oauth/google")
-    public HashMap<String, Object> loginGoogle(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Session>> loginGoogle(
+            @RequestBody HashMap<String, String> body) {
+
         Session session = this.theSecurityService.loginOAuthGoogle(body.get("idToken"));
 
         if (session != null) {
-            theResponse.put("session", session);
-        } else {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return ResponseEntity.ok(
+                    ApiResponse.success(session, "Inicio de sesión con Google exitoso")
+            );
         }
-        return theResponse;
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("No fue posible autenticar con Google"));
     }
 
-    // LOGIN CON GITHUB
+    // LOGIN GITHUB
     @PostMapping("login/oauth/github")
-    public HashMap<String, Object> loginGithub(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Session>> loginGithub(
+            @RequestBody HashMap<String, String> body) {
+
         Session session = this.theSecurityService.loginOAuthGithub(body.get("idToken"));
 
         if (session != null) {
-            theResponse.put("session", session);
-        } else {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return ResponseEntity.ok(
+                    ApiResponse.success(session, "Inicio de sesión con GitHub exitoso")
+            );
         }
-        return theResponse;
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("No fue posible autenticar con GitHub"));
     }
 
-    // LOGIN CON MICROSOFT
+    // LOGIN MICROSOFT
     @PostMapping("login/oauth/microsoft")
-    public HashMap<String, Object> loginMicrosoft(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Session>> loginMicrosoft(
+            @RequestBody HashMap<String, String> body) {
+
         Session session = this.theSecurityService.loginOAuthMicrosoft(body.get("idToken"));
 
         if (session != null) {
-            theResponse.put("session", session);
-        } else {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return ResponseEntity.ok(
+                    ApiResponse.success(session, "Inicio de sesión con Microsoft exitoso")
+            );
         }
-        return theResponse;
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("No fue posible autenticar con Microsoft"));
     }
 
-    // HABILITAR PROCESO DE RESTAURACION DE PASSWORD
+    // RESET PASSWORD
     @PostMapping("reset-password")
-    public HashMap<String, Object> resetPassword(@RequestBody HashMap<String, String> body) {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @RequestBody HashMap<String, String> body) {
+
         String email = body.get("email");
 
         this.theSecurityService.resetPassword(email);
 
-        // Siempre mostramos el mismo mensaje — no revelamos si el correo existe o no
-        theResponse.put("message", "Si tu correo está registrado, recibirás las instrucciones en breve.");
-        return theResponse;
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Si tu correo está registrado, recibirás las instrucciones en breve."
+                )
+        );
     }
 
-    // HABILITACION TEMPORAL DE SESSSION PARA USUARIO (Restablecer Password)
+    // TEMPORAL SESSION
     @PostMapping("get-temporal-session")
-    public HashMap<String, Object> getTemporalSession(@RequestBody HashMap<String, String> body, final HttpServletResponse response) throws IOException {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Session>> getTemporalSession(
+            @RequestBody HashMap<String, String> body) {
+
         String token = body.get("token");
 
         Session session = this.theSecurityService.getTemporalSession(token);
 
         if (session != null) {
-            theResponse.put("session", session);
-        } else {
-            // 401 — token inválido o expirado
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return ResponseEntity.ok(
+                    ApiResponse.success(session, "Sesión temporal válida")
+            );
         }
-        return theResponse;
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Token inválido o expirado"));
     }
 
-    // VALIDACION DE EXISTENCIA DE USUARIO EN NUESTRA BASE DE DATOS (Mediante email).
+    // USER EXIST BY EMAIL
     @GetMapping("user-exist/email/{email}")
-    public HashMap<String, Object> userExistByEmail(@PathVariable String email) {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Boolean>> userExistByEmail(
+            @PathVariable String email) {
+
         boolean exists = this.theSecurityService.existUserByEmail(email);
-        theResponse.put("exists", exists); // true = Ya existe, false = Correo Disponible
-        return theResponse;
+
+        return ResponseEntity.ok(
+                ApiResponse.success(exists, "Validación completada")
+        );
     }
 
+    // VALIDATE 2FA
     @PutMapping("validateCode2FA")
-    public HashMap<String, Object> validateCode2FA(@RequestBody HashMap<String, String> body) {
-        HashMap<String, Object> theResponse = new HashMap<>();
+    public ResponseEntity<ApiResponse<Session>> validateCode2FA(
+            @RequestBody HashMap<String, String> body) {
+
         String code2FA = body.get("code2FA");
         String sessionId = body.get("sessionId");
-        boolean isValid = false;
 
-         Session validSession = this.theSecurityService.validatecode2FA(code2FA, sessionId);
+        Session validSession = this.theSecurityService.validatecode2FA(
+                code2FA,
+                sessionId
+        );
 
-         if (validSession != null){
-             isValid = true;
-             theResponse.put("session", validSession);
+        if (validSession != null) {
+            return ResponseEntity.ok(
+                    ApiResponse.success(validSession, "Código 2FA válido")
+            );
+        }
 
-         }
-         theResponse.put("isValid", isValid);
-
-
-        return theResponse;
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Código 2FA inválido"));
     }
 
+    // PERMISSIONS VALIDATION
     @PostMapping("permissions-validation")
-    public boolean permissionsValidation(final HttpServletRequest request, @RequestBody Permission permissionData){
-        return this.theSecurityService.permissionsValidation(request, permissionData);
+    public ResponseEntity<ApiResponse<Boolean>> permissionsValidation(
+            final HttpServletRequest request,
+            @RequestBody Permission permissionData) {
+
+        boolean hasPermission = this.theSecurityService.permissionsValidation(
+                request,
+                permissionData
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(hasPermission, "Validación completada")
+        );
     }
 
+    // EXIST USER BY ID
     @GetMapping("{user_id}/exist")
-    public boolean existUser(@PathVariable String user_id){
-        return this.theSecurityService.existUserById(user_id);
+    public ResponseEntity<ApiResponse<Boolean>> existUser(
+            @PathVariable String user_id) {
+
+        boolean exists = this.theSecurityService.existUserById(user_id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(exists, "Validación completada")
+        );
     }
 
 }
