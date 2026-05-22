@@ -16,15 +16,13 @@ import java.util.HashMap;
 import java.util.Map;
 @Service
 public class JwtService {
-    // Necesitamos dos variables de entorno para que JWT funcione.
-    @Value("${jwt.secret}") // El secreto (Firma).
-    private String secret; // Esta es la clave secreta que se utiliza para firmar el token. Debe mantenerse segura.
+    // Necesitamos dos variables de entorno para que JWT funcione. SecretKey y expiration. La secretkey puede ser fija y ser cargada desde el propierties o generarse cada vez que se corre el aplicativo
 
     @Value("${jwt.expiration}") // (Expiracion del token).
     private Long expiration; // Tiempo de expiración del token en milisegundos.
 
     // CADA VEZ QUE SE CORRE EL PROGRAMA SE GENERA UNA NUEVA SECRET KEY (POR TANTO, NO PUEDE HABER UNA SESSION VALIDA, ANTES DE CORRER NUEVAMENTE EL PROGRAMA)
-    private Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     // GENERAR TOKEN (expiracion por defecto)
     public String generateToken(User theUser) {
@@ -66,19 +64,6 @@ public class JwtService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    // METODO PARA OBTENER LA EXPIRACION DE UN TOKEN (Default)
-    public Date getExpirationDate(){
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expiration);
-        return expiryDate;
-    }
-
-    // METODO PARA OBTENER LA EXPIRACION DE UN TOKEN (Temporal)
-    public Date getCustomExpirationDate(long customExpiration) {
-        Date now = new Date();
-        return new Date(now.getTime() + customExpiration);
     }
 
     // METODO DE VALIDACION DE TOKENS

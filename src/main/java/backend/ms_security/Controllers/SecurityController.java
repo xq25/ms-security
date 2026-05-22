@@ -19,22 +19,6 @@ public class SecurityController {
     @Autowired
     private SecurityService theSecurityService;
 
-    // REGISTER MANUAL
-//    @PostMapping("register")
-//    public ResponseEntity<ApiResponse<Session>> register(@RequestBody User newUser) {
-//
-//        Session session = this.theSecurityService.register(newUser);
-//
-//        if (session != null) {
-//            return ResponseEntity.ok(
-//                    ApiResponse.success(session, "Usuario registrado correctamente")
-//            );
-//        }
-//
-//        return ResponseEntity.status(HttpStatus.CONFLICT)
-//                .body(ApiResponse.error("El correo ya está registrado"));
-//    }
-
     // REGISTER CON ASIGNACION DE ROLE POR DEFECTO
     @PostMapping("register")
     public ResponseEntity<ApiResponse<Session>> registerWithDefaultRole(@RequestBody RegisterRequest registerRequest) {
@@ -171,18 +155,6 @@ public class SecurityController {
                 .body(ApiResponse.error("Token inválido o expirado"));
     }
 
-    // USER EXIST BY EMAIL
-    @GetMapping("user-exist/email/{email}")
-    public ResponseEntity<ApiResponse<Boolean>> userExistByEmail(
-            @PathVariable String email) {
-
-        boolean exists = this.theSecurityService.existUserByEmail(email);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(exists, "Validación completada")
-        );
-    }
-
     // VALIDATE 2FA
     @PutMapping("validateCode2FA")
     public ResponseEntity<ApiResponse<Session>> validateCode2FA(
@@ -208,38 +180,17 @@ public class SecurityController {
 
     // PERMISSIONS VALIDATION
     @PostMapping("permissions-validation")
-    public ResponseEntity<Boolean> permissionsValidation(
-            final HttpServletRequest request,
-            @RequestBody Permission permissionData) {
+    public ResponseEntity<ApiResponse<Boolean>> permissionsValidation(final HttpServletRequest request, @RequestBody Permission permissionData) {
 
-        boolean hasPermission = this.theSecurityService.permissionsValidation(
-                request,
-                permissionData
-        );
+        ApiResponse<Boolean> hasPermission = this.theSecurityService.permissionsValidation(request, permissionData);
 
         return ResponseEntity.ok(
                 hasPermission
         );
     }
 
-    // EXIST USER BY ID
-    @GetMapping("{user_id}/exist")
-    public ResponseEntity<ApiResponse<Boolean>> existUser(
-            @PathVariable String user_id) {
 
-        boolean exists = this.theSecurityService.existUserById(user_id);
 
-        return ResponseEntity.ok(
-                ApiResponse.success(exists, "Validación completada")
-        );
-    }
 
-    @GetMapping("user/email/{email}")
-    public ResponseEntity<ApiResponse<User>> findByEmail(@PathVariable String email) {
-        ApiResponse<User> response = this.theSecurityService.findUserByEmail(email);
-        return response.isSuccess()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
 
 }

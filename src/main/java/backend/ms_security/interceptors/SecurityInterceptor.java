@@ -16,7 +16,6 @@ import java.util.Map;
 
 // Porteria de la aplicacion
 @Component
-
 // Implementamos el interceptor propio de Spring Boot (Handler Interceptor). Este es el celador que va a validar quien entra y no. Mediante ValidationService
 public class SecurityInterceptor implements HandlerInterceptor {
 

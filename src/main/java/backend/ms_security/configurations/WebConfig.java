@@ -62,7 +62,7 @@ public class WebConfig implements WebMvcConfigurer {
         // Se activa el interceptor cada que se venga algo dentro del request con el sufijo /api/xxxxxxxxxxxx
         registry.addInterceptor(securityInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/public/**"); // Excluimos del interceptor las requeste que vengan con el sufijo /api/public
+                .excludePathPatterns("/api/public/**", "/getway/security/api/**"); // Excluimos del interceptor las requeste que vengan con el sufijo /api/public
 
     }
 

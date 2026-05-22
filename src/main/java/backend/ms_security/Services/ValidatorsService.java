@@ -30,7 +30,7 @@ public class ValidatorsService {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    /** @Param request : Aqui vienen almacenada la ruta, el metodo, el token y el body.
+    /**  request : Aqui vienen almacenada la ruta, el metodo, el token y el body.
      *
      */
     public ValidationResult validationRolePermission(HttpServletRequest request, String url, String method) {
@@ -68,7 +68,7 @@ public class ValidatorsService {
     }
 
     /**Obtiene o analiza el token y decifra dichos datos para poder re armar al usuario
-     * @request : Contiene el token en el header.
+     * request : Contiene el token en el header.
      *
      */
     public User getUser(final HttpServletRequest request) {

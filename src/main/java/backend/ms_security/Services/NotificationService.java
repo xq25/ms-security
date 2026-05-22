@@ -20,7 +20,7 @@ public class NotificationService {
      * @param email      Destinatario
      * @param body       Cuerpo del mensaje
      */
-    public boolean sendEmail(String email, String body) {
+    public void sendEmail(String email, String body) {
         try {
             Map<String, String> request = new HashMap<>();
             request.put("email", email);
@@ -33,11 +33,9 @@ public class NotificationService {
             );
 
             System.out.println("✅ Correo enviado a: " + email);
-            return true;
 
         } catch (Exception e) {
             System.out.println("❌ Error al enviar correo: " + e.getMessage());
-            return false;
         }
     }
 }
