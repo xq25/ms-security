@@ -85,4 +85,32 @@ public class SecurityGetwayController {
         }
     }
 
+    @GetMapping("get-name/{userId}")
+    public ResponseEntity<String> getUsernameByUserId(@PathVariable String userId, @RequestHeader(value = "secretKey", required = false) String secretKey) {
+        if (isInvalidSecret(secretKey)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(null);
+        }
+
+        String response = this.theSecurityGetwayService.getUserNameById(userId);
+
+        return response != null
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    }
+
+    @GetMapping("get-email/{userId}")
+    public ResponseEntity<String> getEmailByUserId(@PathVariable String userId, @RequestHeader(value = "secretKey", required = false) String secretKey) {
+        if (isInvalidSecret(secretKey)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(null);
+        }
+
+        String response = this.theSecurityGetwayService.getUserEmailById(userId);
+
+        return response != null
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    }
+
 }

@@ -69,6 +69,22 @@ public class SecurityGetwayService {
         return allowedRoles.get(roleKey.toLowerCase());
     }
 
+    public String getUserNameById(String user_id){
+         ApiResponse<User> user = theUserService.findById(user_id);
+         if (user.isSuccess()){
+             return user.getData().getName();
+         }
+         return null;
+    }
+
+    public String getUserEmailById(String user_id){
+         ApiResponse<User> user = theUserService.findById(user_id);
+         if (user.isSuccess()){
+             return user.getData().getEmail();
+         }
+         return null;
+     }
+
 
 
 }
