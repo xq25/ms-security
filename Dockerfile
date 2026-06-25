@@ -19,6 +19,9 @@ RUN ./mvnw package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
 
+# wget viene en alpine y lo usa el health check del compose
+RUN apk add --no-cache wget
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=builder /app/target/ms-security-0.0.1-SNAPSHOT.jar app.jar
