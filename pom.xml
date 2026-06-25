@@ -30,6 +30,12 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+		<!-- Actuator — requerido para health checks de Docker -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
         <dependency>
 			<groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
