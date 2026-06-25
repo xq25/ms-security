@@ -1,0 +1,7 @@
+target/
+*.log
+*.md
+.git/
+.gitignore
+# El serviceAccountKey se monta como volumen — no se copia al contexto de build
+src/main/resources/serviceAccountKey.json
