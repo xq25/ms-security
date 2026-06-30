@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class ValidatorsService {
@@ -44,7 +45,14 @@ public class ValidatorsService {
         url = url.replaceAll("[0-9a-fA-F]{24}|\\d+", "?");
         System.out.println("URL " + url + " metodo " + method);
 
+        // Intento exacto primero; si no encuentra, busca por sufijo para soportar
+        // URLs almacenadas con host:port (ej: http://127.0.0.1:8080/api/patients)
         Permission thePermission = this.thePermissionRepository.getPermission(url, method);
+        if (thePermission == null) {
+            String normalized = url.replaceAll("/$", ""); // quitar trailing slash
+            String pattern = ".*" + Pattern.quote(normalized) + "/?$";
+            thePermission = this.thePermissionRepository.getPermissionByRegex(pattern, method);
+        }
         List<UserRole> roles = this.theUserRoleRepository.getRolesByUser(theUser.getId());
 
         int i = 0;
