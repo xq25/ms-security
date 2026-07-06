@@ -13,6 +13,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.Arrays;
+
 // Estamos configurando el framework para validar cada que llegue algo desde afuera
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -23,12 +25,20 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${app.storage.location}")
     private String storageLocation;
 
+    // Orígenes permitidos para CORS. En local: "http://localhost:4200".
+    // En Docker se inyecta via env var APP_CORS_ALLOWED_ORIGINS="http://localhost"
+    // (Spring Boot convierte APP_CORS_ALLOWED_ORIGINS → app.cors.allowed-origins)
+    @Value("${app.cors.allowed-origins:http://localhost:4200}")
+    private String corsAllowedOrigins;
+
     // Este Bean corre ANTES del interceptor, resuelve el OPTIONS limpiamente (Verificar)
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:4200");
+        Arrays.stream(corsAllowedOrigins.split(","))
+              .map(String::trim)
+              .forEach(config::addAllowedOrigin);
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
 
@@ -43,7 +53,7 @@ public class WebConfig implements WebMvcConfigurer {
     //Esto permite realizar peticiones directamente desde el front
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:4200")  // Puerto de Angular
+                .allowedOrigins(corsAllowedOrigins.split(","))  // Desde app.cors.allowed-origins
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
