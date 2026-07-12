@@ -1,14 +1,15 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.DTOs.Pagination.PageRequestDTO;
+import backend.ms_security.DTOs.Response.PagedResponse;
 import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.User;
 import backend.ms_security.Services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -19,8 +20,22 @@ public class UserController {
     private UserService theUserService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<User>>> find() {
-        return ResponseEntity.ok(this.theUserService.find());
+    public ResponseEntity<ApiResponse<PagedResponse<User>>> find(@Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.theUserService.find(pageRequest));
+    }
+
+    @GetMapping("search/by-name")
+    public ResponseEntity<ApiResponse<PagedResponse<User>>> searchByName(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.theUserService.searchByName(query, pageRequest));
+    }
+
+    @GetMapping("search/by-email")
+    public ResponseEntity<ApiResponse<PagedResponse<User>>> searchByEmail(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.theUserService.searchByEmail(query, pageRequest));
     }
 
     @GetMapping("{id}")

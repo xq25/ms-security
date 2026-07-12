@@ -1,5 +1,7 @@
 package backend.ms_security.Services;
 
+import backend.ms_security.DTOs.Pagination.PageRequestDTO;
+import backend.ms_security.DTOs.Response.PagedResponse;
 import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Profile;
 import backend.ms_security.Models.Session;
@@ -10,6 +12,7 @@ import backend.ms_security.Repositories.SessionRepository;
 import backend.ms_security.Repositories.UserRepository;
 import backend.ms_security.Repositories.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,8 +33,30 @@ public class UserService {
     @Autowired
     private ClasificatorService clasificatorService;
 
-    public ApiResponse<List<User>> find() {
-        return ApiResponse.success(this.theUserRepository.findAll(), "Usuarios obtenidos correctamente");
+    public ApiResponse<PagedResponse<User>> find(PageRequestDTO pageRequest) {
+        Page<User> page = this.theUserRepository.findAll(pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Usuarios obtenidos correctamente");
+    }
+
+    public ApiResponse<PagedResponse<User>> searchByName(String query, PageRequestDTO pageRequest) {
+        Page<User> page = this.theUserRepository.findByNameContainingIgnoreCase(query, pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Resultados de búsqueda por nombre");
+    }
+
+    public ApiResponse<PagedResponse<User>> searchByEmail(String query, PageRequestDTO pageRequest) {
+        Page<User> page = this.theUserRepository.findByEmailContainingIgnoreCase(query, pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Resultados de búsqueda por email");
+    }
+
+    private PagedResponse<User> toPagedResponse(Page<User> page) {
+        return PagedResponse.<User>builder()
+                .content(page.getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
     }
 
     public ApiResponse<User> findById(String id) {

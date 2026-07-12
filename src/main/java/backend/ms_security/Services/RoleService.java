@@ -1,5 +1,7 @@
 package backend.ms_security.Services;
 
+import backend.ms_security.DTOs.Pagination.PageRequestDTO;
+import backend.ms_security.DTOs.Response.PagedResponse;
 import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Role;
 import backend.ms_security.Models.RolePermission;
@@ -8,6 +10,7 @@ import backend.ms_security.Repositories.RolePermissionRepository;
 import backend.ms_security.Repositories.RoleRepository;
 import backend.ms_security.Repositories.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +25,25 @@ public class RoleService {
     @Autowired
     private RolePermissionRepository theRolePermissionRepository;
 
-    public ApiResponse<List<Role>> find() {
-        return ApiResponse.success(this.theRoleRepository.findAll(), "Roles obtenidos correctamente");
+    public ApiResponse<PagedResponse<Role>> find(PageRequestDTO pageRequest) {
+        Page<Role> page = this.theRoleRepository.findAll(pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Roles obtenidos correctamente");
+    }
+
+    public ApiResponse<PagedResponse<Role>> searchByName(String query, PageRequestDTO pageRequest) {
+        Page<Role> page = this.theRoleRepository.findByNameContainingIgnoreCase(query, pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Resultados de búsqueda por nombre");
+    }
+
+    private PagedResponse<Role> toPagedResponse(Page<Role> page) {
+        return PagedResponse.<Role>builder()
+                .content(page.getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
     }
 
     public ApiResponse<Role> findById(String id) {

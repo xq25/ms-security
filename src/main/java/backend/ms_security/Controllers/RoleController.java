@@ -1,14 +1,15 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.DTOs.Pagination.PageRequestDTO;
+import backend.ms_security.DTOs.Response.PagedResponse;
 import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Role;
 import backend.ms_security.Services.RoleService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -19,8 +20,15 @@ public class RoleController {
     private RoleService theRoleService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<Role>>> find() {
-        return ResponseEntity.ok(this.theRoleService.find());
+    public ResponseEntity<ApiResponse<PagedResponse<Role>>> find(@Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.theRoleService.find(pageRequest));
+    }
+
+    @GetMapping("search/by-name")
+    public ResponseEntity<ApiResponse<PagedResponse<Role>>> searchByName(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.theRoleService.searchByName(query, pageRequest));
     }
 
     @GetMapping("{id}")

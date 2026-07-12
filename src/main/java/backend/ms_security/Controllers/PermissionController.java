@@ -1,14 +1,15 @@
 package backend.ms_security.Controllers;
 
+import backend.ms_security.DTOs.Pagination.PageRequestDTO;
+import backend.ms_security.DTOs.Response.PagedResponse;
 import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Permission;
 import backend.ms_security.Services.PermissionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -19,8 +20,22 @@ public class PermissionController {
     private PermissionService thePermissionService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<Permission>>> find() {
-        return ResponseEntity.ok(this.thePermissionService.find());
+    public ResponseEntity<ApiResponse<PagedResponse<Permission>>> find(@Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.thePermissionService.find(pageRequest));
+    }
+
+    @GetMapping("search/by-url")
+    public ResponseEntity<ApiResponse<PagedResponse<Permission>>> searchByUrl(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.thePermissionService.searchByUrl(query, pageRequest));
+    }
+
+    @GetMapping("search/by-model")
+    public ResponseEntity<ApiResponse<PagedResponse<Permission>>> searchByModel(
+            @RequestParam String query,
+            @Valid @ModelAttribute PageRequestDTO pageRequest) {
+        return ResponseEntity.ok(this.thePermissionService.searchByModel(query, pageRequest));
     }
 
     @GetMapping("{id}")

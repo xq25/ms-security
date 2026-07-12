@@ -1,11 +1,14 @@
 package backend.ms_security.Services;
 
+import backend.ms_security.DTOs.Pagination.PageRequestDTO;
+import backend.ms_security.DTOs.Response.PagedResponse;
 import backend.ms_security.Models.ApiResponse;
 import backend.ms_security.Models.Permission;
 import backend.ms_security.Models.RolePermission;
 import backend.ms_security.Repositories.PermissionRepository;
 import backend.ms_security.Repositories.RolePermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,8 +21,30 @@ public class PermissionService {
     @Autowired
     private RolePermissionRepository theRolePermissionRepository;
 
-    public ApiResponse<List<Permission>> find() {
-        return ApiResponse.success(this.thePermissionRepository.findAll(), "Permisos obtenidos correctamente");
+    public ApiResponse<PagedResponse<Permission>> find(PageRequestDTO pageRequest) {
+        Page<Permission> page = this.thePermissionRepository.findAll(pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Permisos obtenidos correctamente");
+    }
+
+    public ApiResponse<PagedResponse<Permission>> searchByUrl(String query, PageRequestDTO pageRequest) {
+        Page<Permission> page = this.thePermissionRepository.findByUrlContainingIgnoreCase(query, pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Resultados de búsqueda por URL");
+    }
+
+    public ApiResponse<PagedResponse<Permission>> searchByModel(String query, PageRequestDTO pageRequest) {
+        Page<Permission> page = this.thePermissionRepository.findByModelContainingIgnoreCase(query, pageRequest.toPageable());
+        return ApiResponse.success(toPagedResponse(page), "Resultados de búsqueda por modelo");
+    }
+
+    private PagedResponse<Permission> toPagedResponse(Page<Permission> page) {
+        return PagedResponse.<Permission>builder()
+                .content(page.getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .last(page.isLast())
+                .build();
     }
 
     public ApiResponse<Permission> findById(String id) {
